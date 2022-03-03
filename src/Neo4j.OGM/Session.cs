@@ -1,14 +1,34 @@
+using Neo4j.Driver;
+
 namespace Neo4j.OGM
 {
     public class Session : IDisposable
     {
         //TODO: implementation
+        private bool _disposed = true;
 
-        public Session()
-        { }
+        private readonly IDriver _driver;
+
+        public Session(
+            IDriver driver
+        )
+        {
+            _driver = driver;
+        }
 
         protected virtual void Dispose(bool disposing)
         {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                _driver.Dispose();
+            }
+
+            _disposed = true;
         }
 
         // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
