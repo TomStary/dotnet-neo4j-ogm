@@ -30,5 +30,35 @@ namespace Neo4j.OGM.Internals
             // Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+
+        public Task Add<TEntity>(TEntity entity) where TEntity : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task AddRange<TEntity>(IEnumerable<TEntity> entities) where TEntity : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Remove<TEntity>(TEntity entity) where TEntity : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task RemoveRange<TEntity>(IEnumerable<TEntity> entities) where TEntity : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Update<TEntity>(TEntity entity) where TEntity : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task UpdateRange<TEntity>(IEnumerable<TEntity> entities) where TEntity : class
+        {
+            throw new NotImplementedException();
+        }
     }
 }
