@@ -1,0 +1,15 @@
+@startuml
+class "DbSet`1"<TEntity> {
+    + DbSet(session:ISession)
+    + <<virtual>> FindAsync(keyValues:object?[]?) : Task<TEntity?>
+    + GetEnumerator() : IEnumerator<TEntity>
+    GetEnumerator() : IEnumerator<TEntity>
+    GetEnumerator() : IEnumerator
+}
+class "IQueryable`1"<T> {
+}
+"IQueryable`1" "<TEntity>" <|-- "DbSet`1"
+"DbSet`1" --> "ElementType" Type
+"DbSet`1" --> "Expression" Expression
+"DbSet`1" --> "Provider" IQueryProvider
+@enduml

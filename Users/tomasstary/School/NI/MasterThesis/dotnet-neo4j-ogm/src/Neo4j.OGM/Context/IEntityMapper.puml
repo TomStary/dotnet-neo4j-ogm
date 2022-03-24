@@ -1,0 +1,6 @@
+@startuml
+interface IEntityMapper {
+    Map(entity:object, depth:int) : ICompilerContext
+    CompilerContext() : ICompilerContext
+}
+@enduml

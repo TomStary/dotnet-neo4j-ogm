@@ -1,0 +1,8 @@
+@startuml
+class NodeBuilder {
+    + NodeBuilder(id:long)
+    + AddLabels(labels:IEnumerable<string>) : NodeBuilder
+    + AddProperty(name:string, value:object?) : void
+}
+NodeBuilder --> "Node" NodeModel
+@enduml

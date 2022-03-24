@@ -1,0 +1,9 @@
+@startuml
+class DomainInfo {
+    + DomainInfo(assemblies:Assembly[])
+}
+class "Dictionary`2"<T1,T2> {
+}
+DomainInfo --> "NodeClasses<string,Type>" "Dictionary`2"
+DomainInfo --> "RelationshipClasses<string,Type>" "Dictionary`2"
+@enduml

@@ -1,0 +1,5 @@
+@startuml
+interface "IResponse`1"<T> {
+    Next() : T
+}
+@enduml

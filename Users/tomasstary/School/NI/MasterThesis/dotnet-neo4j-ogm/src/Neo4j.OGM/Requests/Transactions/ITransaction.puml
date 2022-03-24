@@ -1,0 +1,17 @@
+@startuml
+interface ITransaction {
+    Commit() : void
+    Rollback() : void
+    GetStatus() : Status
+}
+enum Status {
+    OPEN,
+    PENDING,
+    ROLLEDBACK,
+    COMMITTED,
+    CLOSED,
+    ROLEBACK_PENDING,
+    COMMIT_PENDING,
+}
+ITransaction +-- Status
+@enduml

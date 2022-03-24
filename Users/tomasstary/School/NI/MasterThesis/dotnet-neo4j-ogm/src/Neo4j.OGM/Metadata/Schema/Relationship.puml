@@ -1,0 +1,11 @@
+@startuml
+class Relationship {
+    + Type : string <<get>> <<init>>
+    + Relationship(type:string, direction:RelationshipAttribute.DirectionEnum, start:INode, end:INode)
+    + Other(node:INode) : INode
+    + Start() : INode
+}
+IRelationship <|-- Relationship
+Relationship --> "StartNode" INode
+Relationship --> "EndNode" INode
+@enduml

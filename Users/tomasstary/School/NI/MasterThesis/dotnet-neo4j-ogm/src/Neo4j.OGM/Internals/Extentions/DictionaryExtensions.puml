@@ -1,0 +1,4 @@
+@startuml
+class DictionaryExtensions <<static>> {
+}
+@enduml

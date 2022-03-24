@@ -1,0 +1,9 @@
+@startuml
+class RowModelReponse {
+    + RowModelReponse(v:object)
+    + Next() : IRowModel
+}
+class "IResponse`1"<T> {
+}
+"IResponse`1" "<IRowModel>" <|-- RowModelReponse
+@enduml

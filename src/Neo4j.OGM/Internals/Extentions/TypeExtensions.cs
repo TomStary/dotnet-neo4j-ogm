@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using Neo4j.OGM.Annotations;
 using Neo4j.OGM.Exceptions;
@@ -43,7 +44,7 @@ internal static class TypeExtensions
             return relationshipAttribute.Type;
         }
 
-        return nameof(type);
+        return type.Name;
     }
 
     internal static MemberInfo GetStartNode(this Type type)
@@ -60,6 +61,11 @@ internal static class TypeExtensions
         return startNode;
     }
 
+    internal static bool HasKeyAttribute(this PropertyInfo property)
+    {
+        return property.GetCustomAttributes().OfType<KeyAttribute>().Any();
+    }
+
     internal static MemberInfo GetEndNode(this Type type)
     {
         var members = type.GetMembers();
@@ -73,4 +79,126 @@ internal static class TypeExtensions
 
         return endNode;
     }
+
+    internal static IEnumerable<string> GetNeo4jLabels(this Type type, object entity)
+    {
+        var attributes = type.GetCustomAttributes();
+        var nodeAttribute = attributes.OfType<NodeAttribute>().FirstOrDefault();
+        var labels = new List<string>()
+        {
+            type.GetNeo4jName(),
+        };
+
+        if (nodeAttribute != null)
+        {
+            labels.Add(nodeAttribute.Label);
+        }
+
+        return labels;
+    }
+
+    internal static IEnumerable<MemberInfo> GetRelationshipsMembers(this Type type)
+    {
+        var members = type.GetMembers();
+
+        return members.Where(member => member.GetCustomAttributes().OfType<RelationshipAttribute>().Any());
+    }
+
+    internal static string GetRelationshipType(this MemberInfo member)
+    {
+        var attributes = member.GetCustomAttributes();
+        var relationshipAttribute = attributes.OfType<RelationshipAttribute>().FirstOrDefault();
+
+        return relationshipAttribute != null ? relationshipAttribute.Type : member.Name;
+    }
+
+    internal static RelationshipAttribute.DirectionEnum GetRelationshipDirection(this MemberInfo member)
+    {
+        var attributes = member.GetCustomAttributes();
+        var relationshipAttribute = attributes.OfType<RelationshipAttribute>().FirstOrDefault();
+
+        return relationshipAttribute != null ? relationshipAttribute.Direction : RelationshipAttribute.DirectionEnum.Outgoing;
+    }
+
+    internal static Type GetEndNodeType(this MemberInfo member)
+    {
+        var type = member.DeclaringType;
+
+        return type switch
+        {
+            null => throw new MappingException($"{nameof(member)} does not have a DeclaringType."),
+            _ => type.HasRelationshipEntityAttribute()
+            ? type.GetEndNode().DeclaringType ?? throw new MappingException($"{nameof(type)} does not have a EndNode.")
+            : type
+        };
+    }
+
+    internal static bool HasIdentityProperty(this Type type)
+    {
+        return type.GetProperties().Any(property => property.GetCustomAttributes().OfType<KeyAttribute>().Any() && property.GetType() == typeof(long));
+    }
+
+    internal static MemberInfo? GetMemberInfoOfKeyAttribute(this Type type)
+    {
+        return type.GetProperties().FirstOrDefault(property => property.GetCustomAttributes().OfType<KeyAttribute>().Any());
+    }
+
+    internal static bool HasPrimaryIndexAttribute(this Type type)
+    {
+        return type.GetProperties().Any(property => property.GetCustomAttributes().OfType<KeyAttribute>().Any());
+    }
+
+    internal static object? GetKeyValue(this Type type, object entity)
+    {
+        var keyAttribute = type.GetMemberInfoOfKeyAttribute();
+
+        if (keyAttribute == null)
+        {
+            throw new MappingException($"Could not find key attribute on type: {type.Name}");
+        }
+
+        return keyAttribute.GetValue(entity);
+    }
+
+    internal static void SetKeyValue(this Type type, object entity, object id)
+    {
+        var keyAttribute = type.GetMemberInfoOfKeyAttribute();
+
+        if (keyAttribute == null)
+        {
+            throw new MappingException($"Could not find key attribute on type: {type.Name}");
+        }
+
+        keyAttribute.SetValue(entity, id);
+    }
+
+    // https://stackoverflow.com/a/33446914
+    internal static object? GetValue(this MemberInfo member, object entity)
+    {
+        return member.MemberType switch
+        {
+            MemberTypes.Field => ((FieldInfo)member).GetValue(entity),
+            MemberTypes.Property => ((PropertyInfo)member).GetValue(entity),
+            _ => throw new NotImplementedException(),
+        };
+    }
+
+    internal static void SetValue(this MemberInfo member, object entity, object value)
+    {
+        switch (member.MemberType)
+        {
+            case MemberTypes.Field:
+                ((FieldInfo)member).SetValue(entity, value);
+                break;
+            case MemberTypes.Property:
+                ((PropertyInfo)member).SetValue(entity, value);
+                break;
+            default:
+                throw new NotImplementedException();
+        };
+    }
+
+    // source https://github.com/dotnet/efcore
+    internal static Type UnwrapNullableType(this Type type)
+        => Nullable.GetUnderlyingType(type) ?? type;
 }

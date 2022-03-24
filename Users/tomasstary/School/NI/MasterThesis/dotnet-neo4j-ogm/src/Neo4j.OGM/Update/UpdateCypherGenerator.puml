@@ -1,0 +1,8 @@
+@startuml
+class UpdateCypherGenerator {
+    + CreateCreateOperation(entity:TEntity, depth:int) : string
+    + CreateDeleteOperation(entity:TEntity, depth:int) : string
+    + CreateSetOperation(entity:TEntity, depth:int) : string
+}
+IUpdateCypherGenerator <|-- UpdateCypherGenerator
+@enduml

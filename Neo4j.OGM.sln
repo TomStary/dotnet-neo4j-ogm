@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo4j.OGM", "src\Neo4j.OGM\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A2D9178B-7077-4691-BA9E-D96B199F3BFD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo4j.OGM", "tests\Neo4j.OGM\Neo4j.OGM.csproj", "{F25EAEC3-2FBD-4DA4-8AA7-16E5BCCD1B7D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo4j.OGM.Tests", "tests\Neo4j.OGM.Tests\Neo4j.OGM.Tests.csproj", "{F25EAEC3-2FBD-4DA4-8AA7-16E5BCCD1B7D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

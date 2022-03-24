@@ -1,0 +1,6 @@
+@startuml
+class DirectedRelationship {
+    + Type : string <<get>>
+    + DirectedRelationship(type:string, direction:RelationshipAttribute.DirectionEnum)
+}
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+class RelationshipBuilder {
+    + Singleton : bool <<get>> <<internal set>>
+    + Reference : long <<get>> <<internal set>>
+    + RelationshipEntity : bool <<get>> <<internal set>>
+    + Type : string <<get>>
+    + RelationshipBuilder(type:string, mapBothDirections:bool)
+    + RelationshipBuilder(type:string, relId:long)
+}
+@enduml

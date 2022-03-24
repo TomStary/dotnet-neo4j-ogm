@@ -1,0 +1,6 @@
+@startuml
+class RowStatementFactory {
+    + CreateStatement(statement:string, parameters:Dictionary<string, object?>) : IStatement
+}
+IStatementFactory <|-- RowStatementFactory
+@enduml

@@ -1,0 +1,5 @@
+@startuml
+class MappedRelationship {
+    + MappedRelationship(sourceId:long, type:string, targetId:long, relationshipId:long?, sourceType:Type, targetType:Type)
+}
+@enduml

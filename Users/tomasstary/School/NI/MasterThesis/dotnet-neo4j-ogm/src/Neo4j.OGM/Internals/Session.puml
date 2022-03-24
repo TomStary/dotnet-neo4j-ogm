@@ -1,0 +1,10 @@
+@startuml
+class Session {
+    + Session(metadata:MetaData, driver:IDriver)
+    + Session(connectionString:string, assemblies:Assembly[])
+    + SaveAsync(entity:TEntity) : Task
+    + Set(entity:TEntity) : DbSet<TEntity>
+    + Dispose() : void
+}
+ISession <|-- Session
+@enduml

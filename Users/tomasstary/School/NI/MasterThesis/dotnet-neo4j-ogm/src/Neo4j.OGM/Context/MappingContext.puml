@@ -1,0 +1,8 @@
+@startuml
+class MappingContext {
+    + MappingContext(metaData:MetaData)
+    + NativeId(entity:object) : long
+    + HasChanges(entity:object) : bool
+    + OptionalNativeId(entity:object) : long?
+}
+@enduml

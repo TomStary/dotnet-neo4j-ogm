@@ -1,0 +1,10 @@
+@startuml
+class RowDataStatement {
+    + Statement : string <<get>>
+    + RowDataStatement(statement:string, parameters:Dictionary<string, object?>)
+}
+class "Dictionary`2"<T1,T2> {
+}
+IStatement <|-- RowDataStatement
+RowDataStatement --> "Parameters<string,object?>" "Dictionary`2"
+@enduml

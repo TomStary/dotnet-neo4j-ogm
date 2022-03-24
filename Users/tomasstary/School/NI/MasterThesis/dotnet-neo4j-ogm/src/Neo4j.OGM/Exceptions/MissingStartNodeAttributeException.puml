@@ -1,0 +1,8 @@
+@startuml
+class MissingStartNodeAttributeException {
+    + MissingStartNodeAttributeException()
+    + MissingStartNodeAttributeException(message:string?)
+    + MissingStartNodeAttributeException(message:string?, innerException:Exception?)
+}
+Exception <|-- MissingStartNodeAttributeException
+@enduml

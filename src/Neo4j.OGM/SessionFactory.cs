@@ -14,9 +14,9 @@ public class SessionFactory
     ///
     /// </summary>
     /// <param name="assemblies"></param>
-    public SessionFactory(string connectionString, params Assembly[] assemblies)
+    public SessionFactory(string connectionString, IAuthToken token, params Assembly[] assemblies)
     {
-        _driver = GraphDatabase.Driver(connectionString);
+        _driver = GraphDatabase.Driver(connectionString, token);
         _metadata = new MetaData(assemblies);
     }
 

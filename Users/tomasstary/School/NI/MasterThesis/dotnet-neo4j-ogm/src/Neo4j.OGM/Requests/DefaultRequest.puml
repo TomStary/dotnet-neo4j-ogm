@@ -1,0 +1,9 @@
+@startuml
+class DefaulterRequest {
+    + DefaulterRequest()
+    + DefaulterRequest(statements:IEnumerable<IStatement>)
+}
+class "IEnumerable`1"<T> {
+}
+DefaulterRequest --> "Statements<IStatement>" "IEnumerable`1"
+@enduml

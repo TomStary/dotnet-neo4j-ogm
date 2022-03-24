@@ -1,0 +1,5 @@
+@startuml
+interface IStatementFactory {
+    CreateStatement(statement:string, parameters:Dictionary<string, object>) : IStatement
+}
+@enduml

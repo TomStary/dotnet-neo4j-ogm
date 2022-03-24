@@ -1,0 +1,11 @@
+@startuml
+class EntityQueryProvider {
+    + EntityQueryProvider(session:ISession)
+    + CreateQuery(expression:Expression) : IQueryable
+    + CreateQuery(expression:Expression) : IQueryable<TElement>
+    + Execute(expression:Expression) : object?
+    + Execute(expression:Expression) : TResult
+    + ExecuteAsync(expression:Expression) : TResult
+}
+IAsyncQueryProvider <|-- EntityQueryProvider
+@enduml

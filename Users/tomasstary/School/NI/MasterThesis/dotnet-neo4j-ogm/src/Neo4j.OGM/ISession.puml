@@ -1,0 +1,7 @@
+@startuml
+interface ISession {
+    SaveAsync(entity:TEntity) : Task
+    Set(entity:TEntity) : DbSet<TEntity>
+}
+IDisposable <|-- ISession
+@enduml

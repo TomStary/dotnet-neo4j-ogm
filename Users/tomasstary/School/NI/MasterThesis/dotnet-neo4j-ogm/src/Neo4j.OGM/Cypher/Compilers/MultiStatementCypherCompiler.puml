@@ -1,0 +1,9 @@
+@startuml
+class MultiStatementCypherCompiler {
+    + MultiStatementCypherCompiler()
+    + UseStatementFactory(statementFactory:IStatementFactory) : void
+    + CreateNode(id:long) : NodeBuilder
+    + ExistingNode(id:long) : NodeBuilder
+}
+MultiStatementCypherCompiler --> "Context" CompilerContext
+@enduml

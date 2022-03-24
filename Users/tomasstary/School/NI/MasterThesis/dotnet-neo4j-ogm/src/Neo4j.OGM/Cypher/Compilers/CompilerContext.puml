@@ -1,0 +1,16 @@
+@startuml
+class CompilerContext {
+    + CompilerContext(compiler:MultiStatementCypherCompiler)
+    + VisitedNode(entity:object) : NodeBuilder?
+    + Visited(entity:object, horizon:int) : bool
+    + VisitedRelationshipEntity(id:long) : bool
+    + RegisterNewObject(id:long, entity:object) : void
+    + Register(entity:object) : void
+    + Unregister(entity:object) : void
+}
+class NodeBuilderHorizonPair {
+}
+ICompilerContext <|-- CompilerContext
+CompilerContext --> "Compiler" MultiStatementCypherCompiler
+CompilerContext +-- NodeBuilderHorizonPair
+@enduml

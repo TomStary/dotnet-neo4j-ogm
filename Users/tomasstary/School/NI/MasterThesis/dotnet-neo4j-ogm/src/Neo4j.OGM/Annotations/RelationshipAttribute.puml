@@ -1,0 +1,14 @@
+@startuml
+class RelationshipAttribute {
+    + Type : string <<get>>
+    + RelationshipAttribute(type:string, direction:DirectionEnum)
+}
+enum DirectionEnum {
+    Outgoing,
+    Incoming,
+    Undirected,
+}
+Attribute <|-- RelationshipAttribute
+RelationshipAttribute --> "Direction" DirectionEnum
+RelationshipAttribute +-- DirectionEnum
+@enduml

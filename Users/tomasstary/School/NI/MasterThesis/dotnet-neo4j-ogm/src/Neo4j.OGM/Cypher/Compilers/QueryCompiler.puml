@@ -1,0 +1,5 @@
+@startuml
+class QueryCompiler {
+    + <<virtual>> ExecuteAsync(query:Expression) : TResult
+}
+@enduml

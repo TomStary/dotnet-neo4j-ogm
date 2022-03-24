@@ -1,0 +1,6 @@
+@startuml
+class SchemaBuilder {
+    + SchemaBuilder(domainInfo:DomainInfo)
+    + Build() : ISchema
+}
+@enduml
