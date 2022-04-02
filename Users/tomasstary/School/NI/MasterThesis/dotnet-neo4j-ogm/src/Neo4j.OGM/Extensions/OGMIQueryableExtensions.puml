@@ -1,5 +1,0 @@
-@startuml
-class OGMIQueryableExtensions <<static>> {
-    + {static} FirstOrDefaultAsync(query:IQueryable<TSource>, predicate:Expression<Func<TSource, bool>>) : Task<TSource?>
-}
-@enduml

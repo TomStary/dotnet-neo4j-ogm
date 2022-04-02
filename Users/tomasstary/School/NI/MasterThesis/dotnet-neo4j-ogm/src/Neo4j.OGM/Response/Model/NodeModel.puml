@@ -1,9 +1,0 @@
-@startuml
-class NodeModel {
-    + Label : string <<get>>
-    + NodeModel(id:long)
-}
-class "IEnumerable`1"<T> {
-}
-NodeModel --> "Labels<string>" "IEnumerable`1"
-@enduml

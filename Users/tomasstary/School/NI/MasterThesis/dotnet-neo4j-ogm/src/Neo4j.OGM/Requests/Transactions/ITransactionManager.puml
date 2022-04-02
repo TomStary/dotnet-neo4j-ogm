@@ -1,8 +1,0 @@
-@startuml
-interface ITransactionManager {
-    CreateTransaction() : ITransaction
-    CurrentTransaction() : ITransaction
-    Commit(transaction:ITransaction) : void
-    Rollback(transaction:ITransaction) : void
-}
-@enduml

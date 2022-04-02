@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 using System.Reflection;
-using Neo4j.OGM.Query;
+using Neo4j.OGM.Queries;
 
 namespace Neo4j.OGM;
 
@@ -23,11 +23,11 @@ public static class OGMIQueryableExtensions
 
     private static TResult ExecuteAsync<TSource, TResult>(
         MethodInfo operatorMethodInfo,
-        IQueryable<TSource> query,
+        IQueryable<TSource> source,
         Expression? expression
     ) where TSource : class
     {
-        if (query.Provider is IAsyncQueryProvider provider)
+        if (source.Provider is IAsyncQueryProvider provider)
         {
             if (operatorMethodInfo.IsGenericMethod)
             {
@@ -41,8 +41,8 @@ public static class OGMIQueryableExtensions
                     instance: null,
                     method: operatorMethodInfo,
                     arguments: expression == null
-                        ? new[] { query.Expression }
-                        : new[] { query.Expression, expression }
+                        ? new[] { source.Expression }
+                        : new[] { source.Expression, expression }
                 )
             );
         }

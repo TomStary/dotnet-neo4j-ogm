@@ -1,8 +1,0 @@
-@startuml
-interface IStatement {
-    Statement : string <<get>>
-}
-class "Dictionary`2"<T1,T2> {
-}
-IStatement --> "Parameters<string,object?>" "Dictionary`2"
-@enduml

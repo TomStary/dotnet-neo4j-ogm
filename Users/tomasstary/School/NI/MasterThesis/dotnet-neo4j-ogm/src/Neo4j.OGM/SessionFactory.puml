@@ -1,6 +1,0 @@
-@startuml
-class SessionFactory {
-    + SessionFactory(connectionString:string, token:IAuthToken, assemblies:Assembly[])
-    + CreateSession() : ISession
-}
-@enduml

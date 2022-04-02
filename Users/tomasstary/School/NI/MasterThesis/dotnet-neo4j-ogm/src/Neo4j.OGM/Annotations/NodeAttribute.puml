@@ -1,7 +1,0 @@
-@startuml
-class NodeAttribute {
-    + Label : string <<get>>
-    + NodeAttribute(label:string)
-}
-Attribute <|-- NodeAttribute
-@enduml

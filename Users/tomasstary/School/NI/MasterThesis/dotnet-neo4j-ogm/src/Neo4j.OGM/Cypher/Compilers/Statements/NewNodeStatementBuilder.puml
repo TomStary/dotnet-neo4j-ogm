@@ -1,6 +1,0 @@
-@startuml
-class NewNodeStatementBuilder {
-    + NewNodeStatementBuilder(newNodes:List<NodeModel>, statementFactory:IStatementFactory)
-    + Build() : IStatement
-}
-@enduml

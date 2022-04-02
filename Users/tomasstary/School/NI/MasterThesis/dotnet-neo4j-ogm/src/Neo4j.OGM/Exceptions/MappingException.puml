@@ -1,6 +1,0 @@
-@startuml
-class MappingException {
-    + MappingException(message:string)
-}
-Exception <|-- MappingException
-@enduml

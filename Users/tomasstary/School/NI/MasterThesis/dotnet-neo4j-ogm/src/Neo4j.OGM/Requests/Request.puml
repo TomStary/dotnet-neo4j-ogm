@@ -1,6 +1,0 @@
-@startuml
-class Request {
-    + Execute(request:DefaulterRequest) : IResponse<IRowModel>
-}
-IRequest <|-- Request
-@enduml

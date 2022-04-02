@@ -1,16 +1,356 @@
-@startuml DBSet Diagram
+@startuml
 interface ISession {
     SaveAsync(entity:TEntity) : Task
-    Set(entity:TEntity) : DbSet<TEntity>
+    Set() : DbSet<TEntity>
+    GetDatabaseSession() : IAsyncSession
 }
 IDisposable <|-- ISession
+ISession --> "Metadata" MetaData
 class "DbSet`1"<TEntity> {
     + DbSet(session:ISession)
     + <<virtual>> FindAsync(keyValues:object?[]?) : Task<TEntity?>
+    + GetEnumerator() : IEnumerator<TEntity>
+    GetEnumerator() : IEnumerator<TEntity>
+    GetEnumerator() : IEnumerator
+    GetAsyncEnumerator(cancellationToken:CancellationToken) : IAsyncEnumerator<TEntity>
 }
-
+class "IQueryable`1"<T> {
+}
+class "IAsyncEnumerable`1"<T> {
+}
+"IQueryable`1" "<TEntity>" <|-- "DbSet`1"
+"IAsyncEnumerable`1" "<TEntity>" <|-- "DbSet`1"
+"DbSet`1" --> "ElementType" Type
+"DbSet`1" --> "Expression" Expression
+"DbSet`1" --> "Provider" IQueryProvider
+"DbSet`1" --> "Expression" Expression
+class SessionFactory {
+    + SessionFactory(connectionString:string, token:IAuthToken, assemblies:Assembly[])
+    + CreateSession() : ISession
+}
+class DirectedRelationship {
+    + Type : string <<get>>
+    + DirectedRelationship(type:string, direction:RelationshipAttribute.DirectionEnum)
+}
+interface IEntityMapper {
+    Map(entity:object, depth:int) : ICompilerContext
+    CompilerContext() : ICompilerContext
+}
+class MappingContext {
+    + MappingContext(metaData:MetaData)
+    + NativeId(entity:object) : long
+    + HasChanges(entity:object) : bool
+    + OptionalNativeId(entity:object) : long?
+}
+class IndentityMap {
+}
+class EntityGraphMapper {
+    + EntityGraphMapper(metadata:MetaData, mappingContext:MappingContext)
+    + Map(entity:object, depth:int) : ICompilerContext
+    + CompilerContext() : ICompilerContext
+}
+class RelationshipNodes {
+    + RelationshipNodes(source:object, target:object, startNodeType:Type, endNodeType:Type)
+}
+IEntityMapper <|-- EntityGraphMapper
+EntityGraphMapper +-- RelationshipNodes
+class MappedRelationship {
+    + MappedRelationship(sourceId:long, type:string, targetId:long, relationshipId:long?, sourceType:Type, targetType:Type)
+}
+class RowModelReponse {
+    + RowModelReponse(v:object)
+    + Next() : IRowModel
+}
+class "IResponse`1"<T> {
+}
+"IResponse`1" "<IRowModel>" <|-- RowModelReponse
+interface "IResponse`1"<T> {
+    Next() : T
+}
+class UpdateCypherGenerator {
+    + CreateCreateOperation(entity:TEntity, depth:int) : string
+    + CreateDeleteOperation(entity:TEntity, depth:int) : string
+    + CreateSetOperation(entity:TEntity, depth:int) : string
+}
+IUpdateCypherGenerator <|-- UpdateCypherGenerator
+interface IUpdateCypherGenerator {
+    CreateCreateOperation(entity:TEntity, depth:int) : string
+    CreateSetOperation(entity:TEntity, depth:int) : string
+    CreateDeleteOperation(entity:TEntity, depth:int) : string
+}
+class ReplacingExpressionVisitor {
+    + ReplacingExpressionVisitor(originals:Expression[], replacements:Expression[])
+    + <<override>> Visit(expression:Expression?) : Expression?
+}
+ExpressionVisitor <|-- ReplacingExpressionVisitor
+class KeyAccessExpression {
+    + KeyAccessExpression(property:PropertyInfo, accessExpression:Expression)
+    + Name : string <<get>>
+    + <<override>> ToString() : string
+}
+CypherExpression <|-- KeyAccessExpression
+IAccessExpression <|-- KeyAccessExpression
+KeyAccessExpression --> "Property" PropertyInfo
+KeyAccessExpression --> "AccessExpression" Expression
+class QueryRootExpression {
+    + <<virtual>> QueryProvider : IAsyncQueryProvider? <<get>>
+    + <<override>> CanReduce : bool <<get>>
+    + QueryRootExpression(asyncQueryProvider:IAsyncQueryProvider, entityType:Type)
+}
+Expression <|-- QueryRootExpression
+QueryRootExpression --> "Type" Type
+QueryRootExpression --> "NodeType" ExpressionType
+QueryRootExpression --> "EntityType" Type
+class ShapedQueryCompilingExpressionVisitor {
+}
+class ResultCursorInjectingExpressionVisitor {
+    + ResultCursorInjectingExpressionVisitor()
+}
+ExpressionVisitor <|-- ShapedQueryCompilingExpressionVisitor
+ShapedQueryCompilingExpressionVisitor +-- ResultCursorInjectingExpressionVisitor
+ExpressionVisitor <|-- ResultCursorInjectingExpressionVisitor
+class EntityShaperExpression {
+    + EntityShaperExpression(entityType:Type, valueBufferExpression:Expression, nullable:bool)
+    + IsNullable : bool <<get>>
+}
+Expression <|-- EntityShaperExpression
+EntityShaperExpression --> "Type" Type
+EntityShaperExpression --> "ValueBufferExpression" Expression
+EntityShaperExpression --> "NodeType" ExpressionType
+class CypherExpressionFactory {
+}
+class CypherConstantExpression {
+    + <<virtual>> Value : object? <<get>>
+}
+CypherExpression <|-- CypherConstantExpression
+class ProjectionMember {
+    + ProjectionMember()
+    + <<override>> Equals(obj:object?) : bool
+    + <<override>> ToString() : string
+}
+class EntityProjectionExpression {
+    + EntityProjectionExpression(entityType:Type, accessExpression:Expression)
+    + Name : string? <<get>>
+    + <<virtual>> BindProperty(property:PropertyInfo, clientEval:bool) : Expression
+}
+Expression <|-- EntityProjectionExpression
+EntityProjectionExpression --> "EntityType" Type
+EntityProjectionExpression --> "AccessExpression" Expression
+EntityProjectionExpression --> "NodeType" ExpressionType
+EntityProjectionExpression --> "Type" Type
+interface IAsyncQueryProvider {
+    ExecuteAsync(expression:Expression) : TResult
+}
+IQueryProvider <|-- IAsyncQueryProvider
+class ReturnExpression {
+    + Alias : string <<get>>
+    + ReturnExpression(entityType:Type, rootAlias:string)
+    + <<override>> ToString() : string
+}
+Expression <|-- ReturnExpression
+ReturnExpression --> "Type" Type
+ReturnExpression --> "NodeType" ExpressionType
+class QueryableMethods <<static>> {
+    {static} QueryableMethods()
+}
+QueryableMethods --> "FirstOrDefaultWithPredicate" MethodInfo
+class CypherParameterExpression {
+    + Name : string <<get>>
+    + CypherParameterExpression(parameterExpression:ParameterExpression, typeMapping:CypherTypeMapping?)
+}
+CypherExpression <|-- CypherParameterExpression
+enum ResultCardinality {
+    Enumerable,
+    Single,
+    SingleOrDefault,
+}
+class ExpressionEqualityComparer <<sealed>> {
+    + GetHashCode(obj:Expression) : int
+    + Equals(x:Expression?, y:Expression?) : bool
+}
+class "IEqualityComparer`1"<T> {
+}
+class ExpressionComparer <<struct>> {
+    + Compare(left:Expression?, right:Expression?) : bool
+}
+"IEqualityComparer`1" "<Expression?>" <|-- ExpressionEqualityComparer
+ExpressionEqualityComparer o-> "Instance" ExpressionEqualityComparer
+ExpressionEqualityComparer +-- ExpressionComparer
+interface IAccessExpression {
+    Name : string <<get>>
+}
+class EntityQueryProvider {
+    + EntityQueryProvider(session:ISession)
+    + CreateQuery(expression:Expression) : IQueryable
+    + CreateQuery(expression:Expression) : IQueryable<TElement>
+    + Execute(expression:Expression) : object?
+    + Execute(expression:Expression) : TResult
+    + ExecuteAsync(expression:Expression) : TResult
+}
+IAsyncQueryProvider <|-- EntityQueryProvider
+class CypherUnaryExpression {
+    + CypherUnaryExpression(operatorType:ExpressionType, operand:CypherExpression, type:Type)
+}
+CypherExpression <|-- CypherUnaryExpression
+CypherUnaryExpression --> "OperatorType" ExpressionType
+CypherUnaryExpression --> "Operand" CypherExpression
+class QueryableMethodTranslationExpressionVisitor {
+    + QueryableMethodTranslationExpressionVisitor(context:QueryCompilationContext)
+}
+class TestExpression {
+    + TestExpression(queryExpression:MatchExpression, expression:Expression)
+}
+ExpressionVisitor <|-- QueryableMethodTranslationExpressionVisitor
+QueryableMethodTranslationExpressionVisitor +-- TestExpression
+Expression <|-- TestExpression
+class MatchExpression {
+    + Limit : CypherExpression? <<get>>
+    + Predicate : CypherExpression? <<get>>
+}
+Expression <|-- MatchExpression
+MatchExpression --> "Type" Type
+MatchExpression --> "NodeType" ExpressionType
+MatchExpression --> "EntityType" Type
+MatchExpression --> "ReturnExpression" ReturnExpression
+class ShapedQueryExpression {
+    + ShapedQueryExpression(queryExpression:Expression, shaperExpression:Expression)
+}
+Expression <|-- ShapedQueryExpression
+ShapedQueryExpression --> "QueryExpression" Expression
+ShapedQueryExpression --> "ShaperExpression" Expression
+ShapedQueryExpression --> "ResultCardinality" ResultCardinality
+ShapedQueryExpression --> "Type" Type
+ShapedQueryExpression --> "NodeType" ExpressionType
+class ProjectionBindingExpression {
+    + ProjectionBindingExpression(queryExpression:Expression, projectionMember:ProjectionMember, type:Type)
+}
+Expression <|-- ProjectionBindingExpression
+ProjectionBindingExpression --> "QueryExpression" Expression
+ProjectionBindingExpression --> "ProjectionMember" ProjectionMember
+ProjectionBindingExpression --> "Type" Type
+ProjectionBindingExpression --> "NodeType" ExpressionType
+class CypherTranslatingExpressionVisitor {
+    + CypherTranslatingExpressionVisitor(cypherExpressionFactory:CypherExpressionFactory)
+}
+class EntityReferenceExpression <<sealed>> {
+    + EntityReferenceExpression(parameter:EntityProjectionExpression)
+    + Convert(type:Type) : Expression
+}
+class CypherTypeMappingVerifyingExpressionVisitor <<sealed>> {
+}
+ExpressionVisitor <|-- CypherTranslatingExpressionVisitor
+CypherTranslatingExpressionVisitor +-- EntityReferenceExpression
+Expression <|-- EntityReferenceExpression
+EntityReferenceExpression --> "ParameterEntity" EntityProjectionExpression
+EntityReferenceExpression --> "EntityType" Type
+EntityReferenceExpression --> "Type" Type
+EntityReferenceExpression --> "NodeType" ExpressionType
+CypherTranslatingExpressionVisitor +-- CypherTypeMappingVerifyingExpressionVisitor
+ExpressionVisitor <|-- CypherTypeMappingVerifyingExpressionVisitor
+class NotParameterizedAttribute <<sealed>> {
+}
+Attribute <|-- NotParameterizedAttribute
+class CypherExpressionVisitor {
+}
+ExpressionVisitor <|-- CypherExpressionVisitor
+class QueryCompiler {
+    + QueryCompiler(session:ISession)
+    + <<virtual>> ExecuteAsync(query:Expression) : TResult
+}
+class CypherBinaryExpression {
+    + CypherBinaryExpression(operatorType:ExpressionType, left:CypherExpression, right:CypherExpression, type:Type)
+}
+CypherExpression <|-- CypherBinaryExpression
+CypherBinaryExpression --> "OperatorType" ExpressionType
+CypherBinaryExpression --> "Left" CypherExpression
+CypherBinaryExpression --> "Right" CypherExpression
+class QueryCompilationContext {
+    + <<const>> QueryParameterPrefix : string = "__"
+    + IsAsync : bool <<get>>
+    + QueryCompilationContext(metadata:MetaData, isAsync:bool)
+    + <<virtual>> CreateQueryExecutor(query:Expression) : Func<QueryContext, TResult>
+}
+class NotTranslatedExpressionType <<sealed>> {
+}
+QueryCompilationContext o-> "QueryContextParameter" ParameterExpression
+QueryCompilationContext o-> "NotTranslatedExpression" Expression
+QueryCompilationContext +-- NotTranslatedExpressionType
+Expression <|-- NotTranslatedExpressionType
+NotTranslatedExpressionType --> "Type" Type
+NotTranslatedExpressionType --> "NodeType" ExpressionType
+class ValueBuffer <<struct>> {
+    + ValueBuffer(values:object?[])
+    + Count : int <<get>>
+    + IsEmpty : bool <<get>>
+    + <<override>> Equals(obj:object?) : bool
+    + Equals(other:ValueBuffer) : bool
+    + <<override>> GetHashCode() : int
+}
+class "IEquatable`1"<T> {
+}
+"IEquatable`1" "<ValueBuffer>" <|-- ValueBuffer
+ValueBuffer o-> "Empty" ValueBuffer
+class MaterializationContext <<struct>> {
+    + MaterializationContext(valueBuffer:ValueBuffer, context:ISession)
+}
+MaterializationContext o-> "GetValueBufferMethod" MethodInfo
+MaterializationContext --> "ValueBuffer" ValueBuffer
+MaterializationContext --> "Context" ISession
+class EnumerableMethods <<static>> {
+    {static} EnumerableMethods()
+}
+EnumerableMethods --> "SingleWithoutPredicate" MethodInfo
+EnumerableMethods --> "SingleOrDefaultWithoutPredicate" MethodInfo
+class EntityUtils {
+    {static} _id : long = 0
+}
+class MappingException {
+    + MappingException(message:string)
+}
+Exception <|-- MappingException
+class MissingStartNodeAttributeException {
+    + MissingStartNodeAttributeException()
+    + MissingStartNodeAttributeException(message:string?)
+    + MissingStartNodeAttributeException(message:string?, innerException:Exception?)
+}
+Exception <|-- MissingStartNodeAttributeException
+class MissingEndNodeAttributeException {
+    + MissingEndNodeAttributeException()
+    + MissingEndNodeAttributeException(message:string?)
+    + MissingEndNodeAttributeException(message:string?, innerException:Exception?)
+}
+Exception <|-- MissingEndNodeAttributeException
 class OGMIQueryableExtensions <<static>> {
     + {static} FirstOrDefaultAsync(query:IQueryable<TSource>, predicate:Expression<Func<TSource, bool>>) : Task<TSource?>
+}
+class QueryStatement {
+    + Statement : string <<get>>
+    + QueryStatement(statement:string, parameters:Dictionary<string, object?>)
+}
+class "Dictionary`2"<T1,T2> {
+}
+IStatement <|-- QueryStatement
+QueryStatement --> "Parameters<string,object?>" "Dictionary`2"
+class RowStatementFactory {
+    + CreateStatement(statement:string, parameters:Dictionary<string, object?>) : IStatement
+}
+IStatementFactory <|-- RowStatementFactory
+class Request {
+    + Execute(request:DefaulterRequest) : IResponse<IRowModel>
+}
+IRequest <|-- Request
+interface IRequest {
+    Execute(request:DefaulterRequest) : IResponse<IRowModel>
+}
+class DefaulterRequest {
+    + DefaulterRequest()
+    + DefaulterRequest(statements:IEnumerable<IStatement>)
+}
+class "IEnumerable`1"<T> {
+}
+DefaulterRequest --> "Statements<IStatement>" "IEnumerable`1"
+class RequestExecutor {
+    + RequestExecutor(session:Session)
 }
 interface IStatementFactory {
     CreateStatement(statement:string, parameters:Dictionary<string, object>) : IStatement
@@ -61,33 +401,29 @@ class Session {
     + Session(metadata:MetaData, driver:IDriver)
     + Session(connectionString:string, assemblies:Assembly[])
     + SaveAsync(entity:TEntity) : Task
-    + Set(entity:TEntity) : DbSet<TEntity>
+    + Set() : DbSet<TEntity>
+    + GetDatabaseSession() : IAsyncSession
     + Dispose() : void
 }
 ISession <|-- Session
+Session --> "Metadata" MetaData
 class SessionSaveDelegate {
 }
-interface IAsyncQueryProvider {
-    ExecuteAsync(expression:Expression) : TResult
-}
-IQueryProvider <|-- IAsyncQueryProvider
-class QueryableMethods <<static>> {
-    {static} QueryableMethods()
-}
-QueryableMethods --> "FirstOrDefaultWithPredicate" MethodInfo
-class EntityQueryProvider {
-    + EntityQueryProvider(session:ISession)
-    + CreateQuery(expression:Expression) : IQueryable
-    + CreateQuery(expression:Expression) : IQueryable<TElement>
-    + Execute(expression:Expression) : object?
-    + Execute(expression:Expression) : TResult
-    + ExecuteAsync(expression:Expression) : TResult
-}
-IAsyncQueryProvider <|-- EntityQueryProvider
 class MetaData {
     + MetaData(assemblies:Assembly[])
 }
 MetaData --> "Schema" ISchema
+class MemberIdentity <<struct>> {
+    + MemberIdentity(nameOrMember:object?)
+    + Equals(other:MemberIdentity) : bool
+    + MemberInfo : MemberInfo? <<get>>
+    + Name : string? <<get>>
+    + {static} Create(name:string?) : MemberIdentity
+}
+class "IEquatable`1"<T> {
+}
+"IEquatable`1" "<MemberIdentity>" <|-- MemberIdentity
+MemberIdentity o-> "None" MemberIdentity
 class DomainInfo {
     + DomainInfo(assemblies:Assembly[])
 }
@@ -105,6 +441,113 @@ NodeModel --> "Labels<string>" "IEnumerable`1"
 interface IRowModel {
     GetValues() : object[]
     Variables() : string[]
+}
+class CypherExpression {
+    + CypherExpression(type:Type, typeMapping:CypherTypeMapping?)
+    + TypeMapping : CypherTypeMapping? <<get>> <<internal set>>
+}
+Expression <|-- CypherExpression
+CypherExpression --> "NodeType" ExpressionType
+CypherExpression --> "Type" Type
+class CypherTypeMapping {
+}
+interface IEvaluatableExpressionFilter {
+    IsEvaluatableExpression(expression:Expression) : bool
+}
+class EvaluatableExpressionFilter {
+    + IsEvaluatableExpression(expression:Expression) : bool
+}
+IEvaluatableExpressionFilter <|-- EvaluatableExpressionFilter
+interface IParameterValues {
+    AddParameter(name:string, value:object?) : void
+}
+class "IReadOnlyDictionary`2"<T1,T2> {
+}
+IParameterValues --> "ParameterValues<string,object?>" "IReadOnlyDictionary`2"
+class EntityMaterializerSource {
+}
+class QueryContext {
+    + AddParameter(name:string, value:object?) : void
+    + QueryContext(context:ISession)
+}
+class "IReadOnlyDictionary`2"<T1,T2> {
+}
+IParameterValues <|-- QueryContext
+QueryContext --> "ParameterValues<string,object?>" "IReadOnlyDictionary`2"
+QueryContext --> "QueryIResultCursor" IResultCursor
+QueryContext --> "Context" ISession
+class "EntityQueryable`1"<TResult> {
+    + ContainsListCollection : bool <<get>>
+    + EntityQueryable(queryProvider:IAsyncQueryProvider, entityType:Type)
+    + EntityQueryable(queryProvider:IAsyncQueryProvider, expression:Expression)
+    + GetAsyncEnumerator(cancellationToken:CancellationToken) : IAsyncEnumerator<TResult>
+    + GetEnumerator() : IEnumerator<TResult>
+    + GetList() : IList
+    GetEnumerator() : IEnumerator
+}
+class "IOrderedQueryable`1"<T> {
+}
+class "IAsyncEnumerable`1"<T> {
+}
+"IOrderedQueryable`1" "<TResult>" <|-- "EntityQueryable`1"
+"IAsyncEnumerable`1" "<TResult>" <|-- "EntityQueryable`1"
+IListSource <|-- "EntityQueryable`1"
+"EntityQueryable`1" --> "ElementType" Type
+"EntityQueryable`1" --> "Expression" Expression
+"EntityQueryable`1" --> "Provider" IQueryProvider
+class "QueryingEnumerable`1"<T> <<sealed>> {
+    + QueryingEnumerable(queryContext:QueryContext, matchExpression:MatchExpression, shaper:Func<QueryContext, T>, contextType:Type)
+    + GetAsyncEnumerator(cancellationToken:CancellationToken) : IAsyncEnumerator<T>
+    + GetEnumerator() : IEnumerator<T>
+    GetEnumerator() : IEnumerator
+    + GenerateQuery() : IStatement
+}
+class "IAsyncEnumerable`1"<T> {
+}
+class "IEnumerable`1"<T> {
+}
+class Enumerator <<sealed>> {
+    + Enumerator(queryingEnumerable:QueryingEnumerable<T>, cancellationToken:CancellationToken)
+    Current : object <<get>>
+    + MoveNextAsync() : ValueTask<bool>
+    + Dispose() : void
+    + Reset() : void
+    + DisposeAsync() : ValueTask
+    MoveNext() : bool
+}
+class "IEnumerator`1"<T> {
+}
+class "IAsyncEnumerator`1"<T> {
+}
+"IAsyncEnumerable`1" "<T>" <|-- "QueryingEnumerable`1"
+"IEnumerable`1" "<T>" <|-- "QueryingEnumerable`1"
+"QueryingEnumerable`1" +-- Enumerator
+"IEnumerator`1" "<T>" <|-- Enumerator
+"IAsyncEnumerator`1" "<T>" <|-- Enumerator
+Enumerator --> "Current" T
+interface IQueryCompiler {
+}
+class ParameterExtractingExpressionVisitor {
+    + ParameterExtractingExpressionVisitor(parameterValues:IParameterValues, parameterize:bool, generateContextAcessor:bool)
+    + <<virtual>> ExtractParameters(expression:Expression, clearEvaluatedValues:bool) : Expression
+    + <<override>> Visit(expression:Expression?) : Expression?
+}
+class EvaluatableExpressionFindingExpressionVisitor <<sealed>> {
+    + EvaluatableExpressionFindingExpressionVisitor(evaluatableExpressionFilter:IEvaluatableExpressionFilter, parameterize:bool)
+    + Find(expression:Expression) : IDictionary<Expression, bool>
+    + <<override>> Visit(expression:Expression?) : Expression?
+}
+class EvaluatedValues <<sealed>> {
+    + CandidateParameterName : string? <<get>> <<init>>
+    + Value : object? <<get>> <<init>>
+    + Constant : Expression? <<get>> <<set>>
+    + Parameter : Expression? <<get>> <<set>>
+}
+ExpressionVisitor <|-- ParameterExtractingExpressionVisitor
+ParameterExtractingExpressionVisitor +-- EvaluatableExpressionFindingExpressionVisitor
+ExpressionVisitor <|-- EvaluatableExpressionFindingExpressionVisitor
+ParameterExtractingExpressionVisitor +-- EvaluatedValues
+class MethodCallTranslator {
 }
 class NodeBuilder {
     + NodeBuilder(id:long)
@@ -152,10 +595,20 @@ class MultiStatementCypherCompiler {
     + ExistingNode(id:long) : NodeBuilder
 }
 MultiStatementCypherCompiler --> "Context" CompilerContext
-class QueryCompiler {
-    + <<virtual>> ExecuteAsync(query:Expression) : TResult
-}
 class ExpressionExtensions <<static>> {
+    + {static} TryGetPropertyArguments(methodCallExpression:MethodCallExpression, entityExpression:Expression?, propertyName:string?) : bool
+    + {static} Property(entity:object, propertyName:string) : TProperty
+    + {static} IsNullConstantExpression(expression:Expression) : bool
+    + {static} GetRequiredDeclaredMethod(type:Type, name:string) : MethodInfo
+    + {static} CreateValueBufferReadValueExpression(valueBuffer:Expression, type:Type, index:int, property:PropertyInfo?) : Expression
+}
+ExpressionExtensions o-> "ValueBufferTryReadValueMethod" MethodInfo
+class IRecordExtension <<static>> {
+    + {static} MapRecordToType(record:IRecord, alias:string) : TEntity
+}
+class MethodInfoExtensions <<static>> {
+    + {static} IsPropertyMethod(methodInfo:MethodInfo?) : bool
+    + {static} GetSimpleMemberName(member:MemberInfo) : string
 }
 interface ITransactionManager {
     CreateTransaction() : ITransaction
@@ -185,7 +638,16 @@ enum Status {
     COMMIT_PENDING,
 }
 ITransaction +-- Status
+class ExpressionExtensions <<static>> {
+}
 class TypeExtensions <<static>> {
+    + {static} GetSequenceType(type:Type) : Type
+    + {static} TryGetSequenceType(type:Type) : Type?
+    + {static} TryGetElementType(type:Type, interfaceOrBaseType:Type) : Type?
+    + {static} GetGenericTypeImplementations(type:Type, interfaceOrBaseType:Type) : IEnumerable<Type>
+    + {static} GetBaseTypes(type:Type) : IEnumerable<Type>
+    + {static} IsNumeric(type:Type) : bool
+    + {static} IsInteger(type:Type) : bool
 }
 class DictionaryExtensions <<static>> {
 }

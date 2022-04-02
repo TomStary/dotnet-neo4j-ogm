@@ -1,9 +1,0 @@
-@startuml
-class TransactionManager {
-    + Commit(transaction:ITransaction) : void
-    + CreateTransaction() : ITransaction
-    + CurrentTransaction() : ITransaction
-    + Rollback(transaction:ITransaction) : void
-}
-ITransactionManager <|-- TransactionManager
-@enduml

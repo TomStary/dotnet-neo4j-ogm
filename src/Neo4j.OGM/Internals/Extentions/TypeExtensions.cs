@@ -148,6 +148,18 @@ internal static class TypeExtensions
         return type.GetProperties().Any(property => property.GetCustomAttributes().OfType<KeyAttribute>().Any());
     }
 
+    internal static PropertyInfo? FindProperty(this Type type, string propertyName)
+    {
+        return type.GetProperties().FirstOrDefault(property => property.Name == propertyName);
+    }
+
+    internal static PropertyInfo? FindProperty(this Type type, MemberInfo property)
+        => type.FindProperty(property.Name);
+
+    internal static PropertyInfo GetRequiredProperty(this Type type, string name)
+       => type.GetTypeInfo().GetProperty(name)
+           ?? throw new InvalidOperationException($"Could not find property '{name}' on type '{type}'");
+
     internal static object? GetKeyValue(this Type type, object entity)
     {
         var keyAttribute = type.GetMemberInfoOfKeyAttribute();
@@ -159,6 +171,90 @@ internal static class TypeExtensions
 
         return keyAttribute.GetValue(entity);
     }
+
+    // source https://github.com/dotnet/efcore
+    public static Type GetSequenceType(this Type type)
+    {
+        var sequenceType = TryGetSequenceType(type);
+        if (sequenceType == null)
+        {
+            throw new ArgumentException($"The type {type.Name} does not represent a sequence");
+        }
+
+        return sequenceType;
+    }
+
+    // source https://github.com/dotnet/efcore
+    public static Type? TryGetSequenceType(this Type type)
+            => type.TryGetElementType(typeof(IEnumerable<>))
+                ?? type.TryGetElementType(typeof(IAsyncEnumerable<>));
+
+    // source https://github.com/dotnet/efcore
+    public static Type? TryGetElementType(this Type type, Type interfaceOrBaseType)
+    {
+        if (type.IsGenericTypeDefinition)
+        {
+            return null;
+        }
+
+        var types = GetGenericTypeImplementations(type, interfaceOrBaseType);
+
+        Type? singleImplementation = null;
+        foreach (var implementation in types)
+        {
+            if (singleImplementation == null)
+            {
+                singleImplementation = implementation;
+            }
+            else
+            {
+                singleImplementation = null;
+                break;
+            }
+        }
+
+        return singleImplementation?.GenericTypeArguments.FirstOrDefault();
+    }
+
+    // source https://github.com/dotnet/efcore
+    public static IEnumerable<Type> GetGenericTypeImplementations(this Type type, Type interfaceOrBaseType)
+    {
+        var typeInfo = type.GetTypeInfo();
+        if (!typeInfo.IsGenericTypeDefinition)
+        {
+            var baseTypes = interfaceOrBaseType.GetTypeInfo().IsInterface
+                ? typeInfo.ImplementedInterfaces
+                : type.GetBaseTypes();
+            foreach (var baseType in baseTypes)
+            {
+                if (baseType.IsGenericType
+                    && baseType.GetGenericTypeDefinition() == interfaceOrBaseType)
+                {
+                    yield return baseType;
+                }
+            }
+
+            if (type.IsGenericType
+                && type.GetGenericTypeDefinition() == interfaceOrBaseType)
+            {
+                yield return type;
+            }
+        }
+    }
+
+    // source https://github.com/dotnet/efcore
+    public static IEnumerable<Type> GetBaseTypes(this Type type)
+    {
+        var currentType = type.BaseType;
+
+        while (currentType != null)
+        {
+            yield return currentType;
+
+            currentType = currentType.BaseType;
+        }
+    }
+
 
     internal static void SetKeyValue(this Type type, object entity, object id)
     {
@@ -199,6 +295,37 @@ internal static class TypeExtensions
     }
 
     // source https://github.com/dotnet/efcore
+    public static bool IsNumeric(this Type type)
+    {
+        type = type.UnwrapNullableType();
+
+        return type.IsInteger()
+            || type == typeof(decimal)
+            || type == typeof(float)
+            || type == typeof(double);
+    }
+
+    // source https://github.com/dotnet/efcore
+    public static bool IsInteger(this Type type)
+    {
+        type = type.UnwrapNullableType();
+
+        return type == typeof(int)
+            || type == typeof(long)
+            || type == typeof(short)
+            || type == typeof(byte)
+            || type == typeof(uint)
+            || type == typeof(ulong)
+            || type == typeof(ushort)
+            || type == typeof(sbyte)
+            || type == typeof(char);
+    }
+
+    // source https://github.com/dotnet/efcore
     internal static Type UnwrapNullableType(this Type type)
         => Nullable.GetUnderlyingType(type) ?? type;
+
+    internal static MethodInfo GetRequiredRuntimeMethod(this Type type, string name, params Type[] parameters)
+            => type.GetTypeInfo().GetRuntimeMethod(name, parameters)
+                ?? throw new InvalidOperationException($"Could not find method '{name}' on type '{type}'");
 }

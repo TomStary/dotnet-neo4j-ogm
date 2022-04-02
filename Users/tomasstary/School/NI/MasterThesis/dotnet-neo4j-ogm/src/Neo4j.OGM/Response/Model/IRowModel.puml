@@ -1,6 +1,0 @@
-@startuml
-interface IRowModel {
-    GetValues() : object[]
-    Variables() : string[]
-}
-@enduml

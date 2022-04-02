@@ -1,6 +1,0 @@
-@startuml
-interface ISchema {
-    FindNode(label:string) : INode
-    FindRelationship(type:string) : IRelationship
-}
-@enduml

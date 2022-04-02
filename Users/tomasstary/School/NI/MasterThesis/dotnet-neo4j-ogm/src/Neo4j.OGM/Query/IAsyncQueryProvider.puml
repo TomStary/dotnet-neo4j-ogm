@@ -1,6 +1,0 @@
-@startuml
-interface IAsyncQueryProvider {
-    ExecuteAsync(expression:Expression) : TResult
-}
-IQueryProvider <|-- IAsyncQueryProvider
-@enduml

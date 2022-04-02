@@ -1,6 +1,0 @@
-@startuml
-class MetaData {
-    + MetaData(assemblies:Assembly[])
-}
-MetaData --> "Schema" ISchema
-@enduml

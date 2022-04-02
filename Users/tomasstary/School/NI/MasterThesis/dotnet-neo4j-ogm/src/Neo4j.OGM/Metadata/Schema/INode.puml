@@ -1,9 +1,0 @@
-@startuml
-interface INode {
-    Label : string? <<get>>
-    AddRelationship(type:string, relationship:IRelationship) : void
-}
-class "Dictionary`2"<T1,T2> {
-}
-INode --> "Relationships<string,IRelationship>" "Dictionary`2"
-@enduml

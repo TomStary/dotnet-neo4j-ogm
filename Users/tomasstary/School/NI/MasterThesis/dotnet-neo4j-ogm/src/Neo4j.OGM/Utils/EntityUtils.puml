@@ -1,5 +1,0 @@
-@startuml
-class EntityUtils {
-    {static} _id : long = 0
-}
-@enduml

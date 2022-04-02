@@ -1,8 +1,0 @@
-@startuml
-class MissingEndNodeAttributeException {
-    + MissingEndNodeAttributeException()
-    + MissingEndNodeAttributeException(message:string?)
-    + MissingEndNodeAttributeException(message:string?, innerException:Exception?)
-}
-Exception <|-- MissingEndNodeAttributeException
-@enduml

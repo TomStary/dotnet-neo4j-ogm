@@ -1,8 +1,0 @@
-@startuml
-interface IRelationship {
-    Type : string <<get>>
-    Start() : INode
-    Other(node:INode) : INode
-}
-IRelationship --> "Direction" DirectionEnum
-@enduml

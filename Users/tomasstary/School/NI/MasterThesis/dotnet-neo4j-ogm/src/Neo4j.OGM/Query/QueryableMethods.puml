@@ -1,6 +1,0 @@
-@startuml
-class QueryableMethods <<static>> {
-    {static} QueryableMethods()
-}
-QueryableMethods --> "FirstOrDefaultWithPredicate" MethodInfo
-@enduml

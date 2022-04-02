@@ -16,7 +16,7 @@ public class Session : ISession
     private readonly SessionSaveDelegate _saveDelegate;
     private readonly MappingContext _mappingContext;
 
-    internal MetaData Metadata => _metadata;
+    public MetaData Metadata => _metadata;
 
     internal MappingContext MappingContext => _mappingContext;
 
@@ -41,7 +41,20 @@ public class Session : ISession
         return _saveDelegate.SaveAsync(entity);
     }
 
-    public DbSet<TEntity> Set<TEntity>(TEntity entity) where TEntity : class => new(this);
+    public DbSet<TEntity> Set<TEntity>() where TEntity : class => new(this);
+
+    internal async Task<IResultCursor> GetResultCursorAsync(IStatement statement)
+    {
+        using var session = _driver.AsyncSession();
+        using var transaction = await session.BeginTransactionAsync();
+        var cursor = await transaction.RunAsync(statement.Statement, statement.Parameters);
+        return cursor;
+    }
+
+    public IAsyncSession GetDatabaseSession()
+    {
+        return _driver.AsyncSession();
+    }
 
     internal async Task<object> ExecuteAsync(DefaulterRequest defualtRequest)
     {

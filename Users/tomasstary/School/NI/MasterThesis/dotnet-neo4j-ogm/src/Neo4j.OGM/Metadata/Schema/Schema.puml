@@ -1,8 +1,0 @@
-@startuml
-class SchemaObj {
-    + SchemaObj()
-    + FindNode(label:string) : INode
-    + FindRelationship(type:string) : IRelationship
-}
-ISchema <|-- SchemaObj
-@enduml

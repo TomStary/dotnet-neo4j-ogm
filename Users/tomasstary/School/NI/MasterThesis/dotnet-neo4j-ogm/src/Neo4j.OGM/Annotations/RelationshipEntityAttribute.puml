@@ -1,7 +1,0 @@
-@startuml
-class RelationshipEntityAttribute {
-    + Type : string <<get>>
-    + RelationshipEntityAttribute(type:string)
-}
-Attribute <|-- RelationshipEntityAttribute
-@enduml

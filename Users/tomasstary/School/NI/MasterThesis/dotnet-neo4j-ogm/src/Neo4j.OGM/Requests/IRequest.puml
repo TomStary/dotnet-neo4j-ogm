@@ -1,5 +1,0 @@
-@startuml
-interface IRequest {
-    Execute(request:DefaulterRequest) : IResponse<IRowModel>
-}
-@enduml

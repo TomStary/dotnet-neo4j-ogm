@@ -1,7 +1,0 @@
-@startuml
-interface IUpdateCypherGenerator {
-    CreateCreateOperation(entity:TEntity, depth:int) : string
-    CreateSetOperation(entity:TEntity, depth:int) : string
-    CreateDeleteOperation(entity:TEntity, depth:int) : string
-}
-@enduml

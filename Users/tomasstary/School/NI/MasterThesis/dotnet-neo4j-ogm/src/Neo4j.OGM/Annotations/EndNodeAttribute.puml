@@ -1,5 +1,0 @@
-@startuml
-class EndNodeAttribute {
-}
-Attribute <|-- EndNodeAttribute
-@enduml
