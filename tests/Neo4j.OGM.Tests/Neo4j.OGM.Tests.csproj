@@ -28,7 +28,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Neo4j.OGM\Neo4j.OGM.csproj" />
-    <ProjectReference Include="..\Neo4j.OGM.Tests.InvalidStructure\Neo4j.OGM.Tests.InvalidStructure.csproj" />
   </ItemGroup>
 
 </Project>
