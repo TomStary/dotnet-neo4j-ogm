@@ -150,8 +150,6 @@ coverage*.xml
 coverage*.info
 lcov.info
 
-CoveragerReport/
-
 # Visual Studio code coverage results
 *.coverage
 *.coveragexml
@@ -451,7 +449,3 @@ $RECYCLE.BIN/
 ## Visual Studio Code
 ##
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json

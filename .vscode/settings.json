@@ -1,7 +1,0 @@
-{
-  "omnisharp.useModernNet": true,
-  "csharp2plantuml.inputPath": "${workspaceFolder}/src/Neo4j.OGM/",
-  "csharp2plantuml.outputPath": "${workspaceFolder}/",
-  "csharp2plantuml.allInOne": true,
-  "csharp2plantuml.public": true
-}
