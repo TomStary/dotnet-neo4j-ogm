@@ -30,14 +30,16 @@ internal static class TypeExtensions
         var attributes = type.GetCustomAttributes();
         var nodeAttribute = attributes.OfType<NodeAttribute>().FirstOrDefault();
 
-        if (nodeAttribute != null)
+        if (nodeAttribute != null
+            && !string.IsNullOrEmpty(nodeAttribute.Label))
         {
             return nodeAttribute.Label;
         }
 
         var relationshipAttribute = attributes.OfType<RelationshipEntityAttribute>().FirstOrDefault();
 
-        if (relationshipAttribute != null)
+        if (relationshipAttribute != null
+            && !string.IsNullOrEmpty(relationshipAttribute.Type))
         {
             return relationshipAttribute.Type;
         }
@@ -93,6 +95,20 @@ internal static class TypeExtensions
         }
 
         return labels;
+    }
+
+    /// <summary>
+    /// Return list of <see cref="PropertyInfo" /> for all properties that are not <see cref="RelationshipAttribute" /> or <see cref="KeyAttribute" />.
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    internal static IEnumerable<PropertyInfo> GetNeo4jProperties(this Type type)
+    {
+        var properties = type.GetProperties();
+
+        return properties.Where(property =>
+            !property.GetCustomAttributes().OfType<RelationshipAttribute>().Any()
+            && !property.GetCustomAttributes().OfType<KeyAttribute>().Any());
     }
 
     internal static IEnumerable<MemberInfo> GetRelationshipsMembers(this Type type)
@@ -157,7 +173,7 @@ internal static class TypeExtensions
 
     internal static bool HasIdentityProperty(this Type type)
     {
-        return type.GetProperties().Any(property => property.GetCustomAttributes().OfType<KeyAttribute>().Any() && property.GetType() == typeof(long));
+        return type.GetProperties().Any(property => property.GetCustomAttributes().OfType<KeyAttribute>().Any() && property.PropertyType == typeof(long?));
     }
 
     internal static MemberInfo? GetMemberInfoOfKeyAttribute(this Type type)

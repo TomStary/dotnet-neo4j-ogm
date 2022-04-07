@@ -1,4 +1,5 @@
 using Neo4j.OGM.Annotations;
+using Neo4j.OGM.Exceptions;
 
 namespace Neo4j.OGM.Cypher.Compilers;
 
@@ -19,6 +20,8 @@ public class RelationshipBuilder
     public bool RelationshipEntity { get => _relationshipEntity; internal set => _relationshipEntity = value; }
 
     public string Type => _type;
+
+    private readonly List<Tuple<string, object?>> _properties = new();
 
     public RelationshipBuilder(string type, bool mapBothDirections = false)
     {
@@ -50,5 +53,15 @@ public class RelationshipBuilder
     internal long? EndNode()
     {
         return _endNodeId;
+    }
+
+    public void AddProperty(string name, object? value)
+    {
+        if (_properties.Any(property => property.Item1 == name))
+        {
+            throw new MappingException($"Property: {name} already mapped.");
+        }
+
+        _properties.Add(new Tuple<string, object?>(name, value));
     }
 }

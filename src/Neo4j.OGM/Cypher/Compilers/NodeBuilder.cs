@@ -6,11 +6,15 @@ namespace Neo4j.OGM.Cypher.Compilers;
 public class NodeBuilder
 {
     private readonly NodeModel _node;
+    private readonly long _id;
     private readonly List<Tuple<string, object?>> _properties = new();
+
+    public long Id => _id;
 
     public NodeBuilder(long id)
     {
         _node = new NodeModel(id);
+        _id = id;
     }
 
     public NodeModel Node => _node;

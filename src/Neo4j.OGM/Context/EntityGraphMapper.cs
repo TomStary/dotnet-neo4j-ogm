@@ -1,18 +1,17 @@
-using System.Collections.Generic;
-using System.Runtime;
 using Neo4j.OGM.Annotations;
 using Neo4j.OGM.Cypher.Compilers;
 using Neo4j.OGM.Exceptions;
 using Neo4j.OGM.Internals.Extensions;
 using Neo4j.OGM.Metadata;
+using static Neo4j.OGM.Annotations.RelationshipAttribute;
 
 namespace Neo4j.OGM.Context;
 
-internal class EntityGraphMapper : IEntityMapper
+public class EntityGraphMapper : IEntityMapper
 {
     private MetaData _metadata;
     private readonly MappingContext _mappingContext;
-    private readonly MultiStatementCypherCompiler _compiler;
+    private readonly IMultiStatementCypherCompiler _compiler;
     private int _currentDepth = 0;
 
     public EntityGraphMapper(
@@ -31,7 +30,7 @@ internal class EntityGraphMapper : IEntityMapper
 
         if (entity == null)
         {
-            throw new NullReferenceException("Missing entity to map.");
+            throw new ArgumentNullException(nameof(entity), "Missing entity to map.");
         }
 
         if (entity.GetType().HasRelationshipEntityAttribute())
@@ -53,7 +52,19 @@ internal class EntityGraphMapper : IEntityMapper
 
             if (!_compiler.Context.VisitedRelationshipEntity(_mappingContext.NativeId(entity)))
             {
-                throw new NotImplementedException();
+                var relationshipType = entity.GetType().GetNeo4jName();
+                var directedRelationship = new DirectedRelationship(relationshipType, DirectionEnum.Outgoing);
+
+                var relationshipBuilder = GetRelationshipBuilder(_compiler, entity, directedRelationship, false);
+
+                UpdateRelationshipEntity(_compiler.Context, entity, relationshipBuilder, entity.GetType());
+
+                var srcId = _mappingContext.NativeId(startNode);
+                var tgtId = _mappingContext.NativeId(endNode);
+
+                var relNodes = new RelationshipNodes(srcId, tgtId, startNode.GetType(), endNode.GetType());
+
+                UpdateRelationship(_compiler.Context, startNodeBuilder, endNodeBuilder, relationshipBuilder, relNodes);
             }
         }
         else
@@ -62,6 +73,37 @@ internal class EntityGraphMapper : IEntityMapper
         }
 
         return _compiler.Context;
+    }
+
+    private void UpdateRelationshipEntity(CompilerContext context, object entity, RelationshipBuilder relationshipBuilder, Type type)
+    {
+        var id = _mappingContext.NativeId(entity);
+        context.VisitRelationshipEntity(id);
+
+        if (id < 0)
+        {
+            context.RegisterNewObject(id, entity);
+        }
+
+        UpdateFieldOnBuilder(entity, relationshipBuilder, type);
+    }
+
+    private void UpdateFieldOnBuilder(object entity, RelationshipBuilder relationshipBuilder, Type type)
+    {
+        var properties = type.GetNeo4jProperties();
+        foreach (var property in properties)
+        {
+            if (!property.CanRead || !property.CanWrite)
+            {
+                continue;
+            }
+
+            var propertyValue = property.GetValue(entity);
+            if (propertyValue != null)
+            {
+                relationshipBuilder.AddProperty(property.Name, propertyValue);
+            }
+        }
     }
 
     public ICompilerContext CompilerContext()
@@ -159,6 +201,8 @@ internal class EntityGraphMapper : IEntityMapper
         Type endNodeType
     )
     {
+        UpdateRelationshipEntity(context, relationshipEntity, relationshipBuilder, relationshipEntity.GetType());
+
         var startEntity = relationshipEntity.GetType().GetStartNode().GetValue(relationshipEntity);
         var targetEntity = relationshipBuilder.GetType().GetEndNode().GetValue(relationshipBuilder);
 
@@ -169,11 +213,11 @@ internal class EntityGraphMapper : IEntityMapper
 
         if (parent == targetEntity)
         {
-            nodes = new RelationshipNodes(targetEntity, startEntity, startNodeType, endNodeType);
+            nodes = new RelationshipNodes(tgtId, srcId, startNodeType, endNodeType);
         }
         else
         {
-            nodes = new RelationshipNodes(startEntity, targetEntity, startNodeType, endNodeType);
+            nodes = new RelationshipNodes(srcId, tgtId, startNodeType, endNodeType);
         }
 
         if (_mappingContext.HasChanges(relationshipEntity))
@@ -186,7 +230,7 @@ internal class EntityGraphMapper : IEntityMapper
         }
 
         var srcNodeBuilder = context.VisitedNode(startEntity);
-        var tgtNodeBuilder = context.VisitedNode(startEntity);
+        var tgtNodeBuilder = context.VisitedNode(targetEntity);
 
         if (parent == targetEntity)
         {
@@ -216,9 +260,23 @@ internal class EntityGraphMapper : IEntityMapper
         }
     }
 
-    private void UpdateRelationship(CompilerContext context, NodeBuilder nodeBuilder, NodeBuilder tgtNodeBuilder, RelationshipBuilder relationshipBuilder, RelationshipNodes nodes)
+    private void UpdateRelationship(
+        CompilerContext context,
+        NodeBuilder? srcNodeBuilder,
+        NodeBuilder? tgtNodeBuilder,
+        RelationshipBuilder relationshipBuilder,
+        RelationshipNodes nodes)
     {
-        throw new NotImplementedException();
+        if (nodes.TargetId == null || nodes.SourceId == null)
+        {
+            CreateRelationship(context, srcNodeBuilder.Id, relationshipBuilder,
+                tgtNodeBuilder.Id, nodes.SourceType, nodes.TargetType);
+        }
+    }
+
+    private void CreateRelationship(CompilerContext context, long id1, RelationshipBuilder relationshipBuilder, long id2, Type sourceType, Type targetType)
+    {
+        throw new NotImplementedException("This method is not a part of POC.");
     }
 
     private object CreateMappedRelationship(RelationshipBuilder relationshipBuilder, RelationshipNodes nodes)
@@ -257,7 +315,7 @@ internal class EntityGraphMapper : IEntityMapper
         return mappedRelationshipOutgoing;
     }
 
-    private RelationshipBuilder GetRelationshipBuilder(MultiStatementCypherCompiler compiler, object entity, DirectedRelationship directedRelationship, bool mapBothDirections)
+    private RelationshipBuilder GetRelationshipBuilder(IMultiStatementCypherCompiler compiler, object entity, DirectedRelationship directedRelationship, bool mapBothDirections)
     {
         RelationshipBuilder relationshipBuilder;
 
@@ -311,9 +369,9 @@ internal class EntityGraphMapper : IEntityMapper
 
         foreach (var mappedRelationship in _mappingContext.GetRelationships())
         {
-            if (mappedRelationship.GetRelationshipId() == relId)
+            if (mappedRelationship.RelationshipId == relId)
             {
-                if (mappedRelationship.GetStartNodeId() != startNodeId || mappedRelationship.GetEndNodeId() != endNodeId)
+                if (mappedRelationship.StartNodeId != startNodeId || mappedRelationship.EndNodeId != endNodeId)
                 {
                     relChanged = true;
                     break;
@@ -376,12 +434,20 @@ internal class EntityGraphMapper : IEntityMapper
 
     private class RelationshipNodes
     {
-        internal long SourceId;
-        internal long TargetId;
-        internal object Source;
-        internal object Target;
+        internal long? SourceId;
+        internal long? TargetId;
+        internal object? Source;
+        internal object? Target;
         internal Type SourceType;
         internal Type TargetType;
+
+        public RelationshipNodes(long? sourceId, long? targetId, Type startNodeType, Type endNodeType)
+        {
+            SourceId = sourceId;
+            TargetId = targetId;
+            SourceType = startNodeType;
+            TargetType = endNodeType;
+        }
 
         public RelationshipNodes(object source, object target, Type startNodeType, Type endNodeType)
         {

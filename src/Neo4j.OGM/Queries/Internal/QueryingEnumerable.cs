@@ -90,7 +90,7 @@ internal sealed class QueryingEnumerable<T> : IAsyncEnumerable<T>, IEnumerable<T
 
                     _session = _queryContext.Context.GetDatabaseSession();
                     _transaction = await _session.BeginTransactionAsync();
-                    _enumerator = await _transaction.RunAsync(cypherQuery.Statement, cypherQuery.Parameters);
+                    _enumerator = await _transaction.RunAsync(new Query(cypherQuery.Statement, cypherQuery.Parameters));
                 }
 
                 var hasNext = await _enumerator.FetchAsync().ConfigureAwait(false);

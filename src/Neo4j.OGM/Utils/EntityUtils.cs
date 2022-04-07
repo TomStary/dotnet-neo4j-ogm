@@ -1,4 +1,3 @@
-using Neo4j.OGM.Exceptions;
 using Neo4j.OGM.Internals.Extensions;
 
 namespace Neo4j.OGM.Utils;

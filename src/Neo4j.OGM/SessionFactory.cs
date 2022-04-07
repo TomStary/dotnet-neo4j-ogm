@@ -1,5 +1,6 @@
 using System.Reflection;
 using Neo4j.Driver;
+using Neo4j.OGM.Context;
 using Neo4j.OGM.Internals;
 using Neo4j.OGM.Metadata;
 
@@ -28,7 +29,11 @@ public class SessionFactory : IDisposable
     /// </summary>
     public ISession Create()
     {
-        return new Session(_metadata, _driver);
+        CheckDisposed();
+        // TODO: Register this to DIC
+        var mappingContext = new MappingContext(_metadata);
+        var entityGraphMapper = new EntityGraphMapper(_metadata, mappingContext);
+        return new Session(_metadata, _driver, entityGraphMapper);
     }
 
     #region IDisposeable
@@ -41,7 +46,7 @@ public class SessionFactory : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (_disposed)
+        if (!_disposed)
         {
             if (disposing)
             {
@@ -49,6 +54,14 @@ public class SessionFactory : IDisposable
             }
         }
         _disposed = true;
+    }
+
+    private void CheckDisposed()
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(GetType().Name, "The session has been disposed.");
+        }
     }
 
     #endregion /* IDisposeable */

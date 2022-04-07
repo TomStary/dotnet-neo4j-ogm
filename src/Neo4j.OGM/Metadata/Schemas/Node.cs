@@ -4,7 +4,7 @@ public class Node : INode
 {
     public string? Label { get; init; }
 
-    public Dictionary<string, IRelationship> Relationships => new();
+    public Dictionary<string, IRelationship> Relationships { get; } = new();
 
     public Node(string? label)
     {

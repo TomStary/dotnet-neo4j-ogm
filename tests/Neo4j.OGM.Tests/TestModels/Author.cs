@@ -4,8 +4,8 @@ using static Neo4j.OGM.Annotations.RelationshipAttribute;
 
 namespace Neo4j.OGM.Tests.TestModels;
 
-[Node(nameof(Person))]
-public class Person
+[Node]
+public class Author
 {
     [Key]
     public long? Id { get; set; }
@@ -13,7 +13,7 @@ public class Person
     public string Name { get; set; } = string.Empty;
 
     [Relationship("AUTHORS", DirectionEnum.Outgoing)]
-    public IEnumerable<Post> Posts { get; set; } = new List<Post>();
+    public IEnumerable<AuthorsRelationship> AuthorsRelationships { get; set; } = new List<AuthorsRelationship>();
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 }

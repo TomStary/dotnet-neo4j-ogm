@@ -154,6 +154,9 @@ lcov.info
 *.coverage
 *.coveragexml
 
+# Coverage report results
+CoverageReport/
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml

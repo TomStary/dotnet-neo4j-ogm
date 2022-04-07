@@ -3,13 +3,11 @@ using Neo4j.OGM.Annotations;
 
 namespace Neo4j.OGM.Tests.TestModels;
 
-[Node(nameof(Person))]
-public class SimplePerson
+[Node]
+public class Note
 {
     [Key]
     public long? Id { get; set; }
 
-    public string Name { get; set; } = string.Empty;
-
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public string Title { get; set; } = string.Empty;
 }

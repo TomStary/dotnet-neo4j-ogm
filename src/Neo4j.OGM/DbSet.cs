@@ -14,8 +14,8 @@ public class DbSet<TEntity> : IQueryable<TEntity>, IAsyncEnumerable<TEntity> whe
     private readonly ISession _session;
     private readonly EntityQueryProvider _provider;
 
-    public Type ElementType { get; }
-    public Expression Expression { get; }
+    public Type ElementType => EntityQueryable.ElementType;
+    public Expression Expression => EntityQueryable.Expression;
     public IQueryProvider Provider => _provider;
 
     private readonly EntityQueryable<TEntity> _queryable;
@@ -61,12 +61,10 @@ public class DbSet<TEntity> : IQueryable<TEntity>, IAsyncEnumerable<TEntity> whe
         );
     }
 
-    public IEnumerator<TEntity> GetEnumerator() => throw new NotImplementedException();
+    IEnumerator<TEntity> IEnumerable<TEntity>.GetEnumerator() => EntityQueryable.GetEnumerator();
 
-    IEnumerator<TEntity> IEnumerable<TEntity>.GetEnumerator() => throw new NotSupportedException();
-
-    IEnumerator IEnumerable.GetEnumerator() => throw new NotSupportedException();
+    IEnumerator IEnumerable.GetEnumerator() => EntityQueryable.GetEnumerator();
 
     IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetAsyncEnumerator(CancellationToken cancellationToken)
-        => throw new NotSupportedException();
+        => EntityQueryable.GetAsyncEnumerator(cancellationToken);
 }

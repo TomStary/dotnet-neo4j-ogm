@@ -65,20 +65,22 @@ public class SchemaBuilder
                 var fromNode = _schema.FindNode(type.GetNeo4jName());
                 INode toNode;
 
-                if (propertyInfo.GetType().HasRelationshipEntityAttribute())
+                if (propertyInfo.PropertyType.GetAnyElementType().HasRelationshipEntityAttribute())
                 {
                     if (direction == DirectionEnum.Outgoing)
                     {
-                        toNode = _schema.FindNode(propertyInfo.GetType().GetEndNode().GetType().GetNeo4jName());
+                        toNode = _schema.FindNode(((PropertyInfo)propertyInfo.PropertyType.GetAnyElementType().GetEndNode())
+                            .PropertyType.GetAnyElementType().GetNeo4jName());
                     }
                     else
                     {
-                        toNode = _schema.FindNode(propertyInfo.GetType().GetStartNode().GetType().GetNeo4jName());
+                        toNode = _schema.FindNode(((PropertyInfo)propertyInfo.PropertyType.GetAnyElementType().GetStartNode())
+                            .PropertyType.GetAnyElementType().GetNeo4jName());
                     }
                 }
                 else
                 {
-                    toNode = _schema.FindNode(propertyInfo.GetImplementedType().GetNeo4jName());
+                    toNode = _schema.FindNode(propertyInfo.PropertyType.GetAnyElementType().GetNeo4jName());
                 }
 
                 var relationship = new Relationship(relationshipType, direction, fromNode, toNode);

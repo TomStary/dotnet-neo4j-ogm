@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using Neo4j.OGM.Cypher.Compilers;
 
 namespace Neo4j.OGM.Queries;
 

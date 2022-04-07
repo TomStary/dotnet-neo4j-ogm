@@ -19,7 +19,7 @@ internal static class IRecordExtension
             var propertyType = property.PropertyType;
             if (property.GetCustomAttributes().OfType<KeyAttribute>().Any())
             {
-                property.SetValue(entity, Convert.ChangeType(((IEntity)record[alias]).Id, propertyType));
+                property.SetValue(entity, ((IEntity)record[alias]).Id);
             }
             else if (((IEntity)record[alias]).Properties.ContainsKey(propertyName))
             {

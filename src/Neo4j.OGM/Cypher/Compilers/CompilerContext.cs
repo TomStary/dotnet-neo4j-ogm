@@ -9,11 +9,11 @@ public class CompilerContext : ICompilerContext
     private HashSet<long> _visitedRelationshipEntities = new();
     private Dictionary<long, object> _createdOnjectsWithId = new();
     private HashSet<object> _registry = new();
-    private readonly MultiStatementCypherCompiler _compiler;
+    private readonly IMultiStatementCypherCompiler _compiler;
 
-    public MultiStatementCypherCompiler Compiler => _compiler;
+    public IMultiStatementCypherCompiler Compiler => _compiler;
 
-    public CompilerContext(MultiStatementCypherCompiler compiler)
+    public CompilerContext(IMultiStatementCypherCompiler compiler)
     {
         _compiler = compiler;
     }
@@ -28,6 +28,11 @@ public class CompilerContext : ICompilerContext
     {
         var pair = _visitedObjects.GetValueOrDefault(GetIdentifier(entity));
         return pair != null && (horizon < 0 || pair.Horizon > horizon);
+    }
+
+    public void VisitRelationshipEntity(long id)
+    {
+        _visitedRelationshipEntities.Add(id);
     }
 
     public bool VisitedRelationshipEntity(long id)

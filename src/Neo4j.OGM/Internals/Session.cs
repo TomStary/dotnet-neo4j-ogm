@@ -1,6 +1,7 @@
-using System.Reflection;
+using System.Collections;
 using Neo4j.Driver;
 using Neo4j.OGM.Context;
+using Neo4j.OGM.Cypher.Compilers;
 using Neo4j.OGM.Metadata;
 using Neo4j.OGM.Requests;
 
@@ -11,44 +12,80 @@ namespace Neo4j.OGM.Internals;
 /// </summary>
 public class Session : ISession
 {
-    private readonly MetaData _metadata;
-    private readonly IDriver _driver;
-    private readonly SessionSaveDelegate _saveDelegate;
-    private readonly MappingContext _mappingContext;
+    private MetaData _metadata;
+    private IDriver _driver;
+    private IEntityMapper _entityGraphMapper;
+    internal MetaData Metadata
+    {
+        get
+        {
+            CheckDisposed();
+            return _metadata;
+        }
+    }
 
-    internal MetaData Metadata => _metadata;
+    private bool _disposed = false;
 
-    internal MappingContext MappingContext => _mappingContext;
-
-    internal Session(MetaData metadata, IDriver driver)
+    internal Session(MetaData metadata, IDriver driver, IEntityMapper entityGraphMapper)
     {
         _metadata = metadata;
         _driver = driver;
-        _saveDelegate = new SessionSaveDelegate(this);
-        _mappingContext = new MappingContext(metadata);
+        _entityGraphMapper = entityGraphMapper;
     }
 
-    public Task SaveAsync<TEntity>(TEntity entity) where TEntity : class
+    public async Task SaveAsync<TEntity>(TEntity entity) where TEntity : class
     {
-        return _saveDelegate.SaveAsync(entity);
+        CheckDisposed();
+
+        // tranform entity/entities into array
+        IEnumerable<TEntity> objects;
+        if (typeof(IEnumerable).IsAssignableFrom(entity.GetType()))
+        {
+            objects = (IEnumerable<TEntity>)entity;
+        }
+        else
+        {
+            objects = new[] { entity };
+        }
+
+        // map objects into graph and create statements
+        foreach (var item in objects)
+        {
+            _entityGraphMapper.Map(item, -1);
+        }
+
+        // execute statements
+        await ExecuteSave(_entityGraphMapper.CompilerContext());
     }
 
-    public DbSet<TEntity> Set<TEntity>() where TEntity : class => new(this);
-
-    internal async Task<IResultCursor> GetResultCursorAsync(IStatement statement)
+    public DbSet<TEntity> Set<TEntity>() where TEntity : class
     {
-        using var session = _driver.AsyncSession();
-        using var transaction = await session.BeginTransactionAsync();
-        var cursor = await transaction.RunAsync(statement.Statement, statement.Parameters);
-        return cursor;
+        CheckDisposed();
+
+        return new(this);
     }
 
     public IAsyncSession GetDatabaseSession()
     {
+        CheckDisposed();
+
         return _driver.AsyncSession();
     }
 
-    internal async Task<object> ExecuteAsync(DefaulterRequest defualtRequest)
+    public virtual void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _metadata = null;
+        _driver = null;
+        _entityGraphMapper = null;
+        _disposed = true;
+    }
+
+    private async Task<object> ExecuteAsync(DefaulterRequest defualtRequest)
     {
         var queries = CreateQueries(defualtRequest);
         using var session = _driver.AsyncSession();
@@ -74,6 +111,37 @@ public class Session : ISession
         return resultList;
     }
 
+    private async Task ExecuteSave(ICompilerContext context)
+    {
+        var compiler = context.Compiler;
+        compiler.UseStatementFactory(new RowStatementFactory());
+
+        if (compiler.HasStatementDependentOnNewNode())
+        {
+            await ExecuteStatementsAsync(context, compiler.CreateNodesStatements());
+        }
+        else
+        {
+            await ExecuteStatementsAsync(context, compiler.GetAllStatements());
+        }
+    }
+
+    private async Task ExecuteStatementsAsync(ICompilerContext context, IEnumerable<IStatement> statements)
+    {
+        if (statements.Count() > 0)
+        {
+            var defualtRequest = new DefaulterRequest(statements);
+            try
+            {
+                var response = await ExecuteAsync(defualtRequest);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+    }
+
     private static IEnumerable<Query> CreateQueries(DefaulterRequest defualtRequest)
     {
         var queries = new List<Query>();
@@ -85,19 +153,11 @@ public class Session : ISession
         return queries;
     }
 
-
-    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    // ~Session()
-    // {
-    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-    //     Dispose(disposing: false);
-    // }
-
-    public void Dispose()
+    private void CheckDisposed()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        // Dispose(disposing: true);
-        GC.SuppressFinalize(this);
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(GetType().Name, "The session has been disposed.");
+        }
     }
-
 }

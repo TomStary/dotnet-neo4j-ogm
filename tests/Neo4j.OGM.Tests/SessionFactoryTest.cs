@@ -40,4 +40,17 @@ public class SessionFactoryTest
         Assert.Throws<MissingEndNodeAttributeException>(
             () => new SessionFactory("bolt://localhost:11007", AuthTokens.Basic("neo4j", "rootroot"), assembly.Object));
     }
+
+    [Fact]
+    public async Task DisposeTest()
+    {
+        var assembly = new Moq.Mock<Assembly>();
+        assembly.Setup(a => a.GetTypes()).Returns(new[] { typeof(Person), typeof(Post) });
+
+        var sessionFactory = new SessionFactory("bolt://localhost:11007", AuthTokens.Basic("neo4j", "rootroot"), assembly.Object);
+
+        sessionFactory.Dispose();
+
+        Assert.Throws<ObjectDisposedException>(() => sessionFactory.Create());
+    }
 }

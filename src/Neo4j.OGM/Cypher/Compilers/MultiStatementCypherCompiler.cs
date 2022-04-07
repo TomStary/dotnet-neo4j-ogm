@@ -4,14 +4,14 @@ using Neo4j.OGM.Requests;
 
 namespace Neo4j.OGM.Cypher.Compilers;
 
-public class MultiStatementCypherCompiler
+public class MultiStatementCypherCompiler : IMultiStatementCypherCompiler
 {
     private readonly CompilerContext _compilerContext;
     private readonly List<NodeBuilder> _newNodeBuilders = new();
     private readonly List<RelationshipBuilder> _newRelationshipBuilders = new();
     private readonly List<RelationshipBuilder> _existingRelationshipBuilders = new();
     private readonly List<NodeBuilder> _existingNodeBuilders = new();
-    private IStatementFactory _statementFactory;
+    private IStatementFactory _statementFactory = null!;
 
     public CompilerContext Context => _compilerContext;
 
@@ -20,7 +20,7 @@ public class MultiStatementCypherCompiler
         _compilerContext = new CompilerContext(this);
     }
 
-    internal IEnumerable<IStatement> GetAllStatements()
+    public IEnumerable<IStatement> GetAllStatements()
     {
         var statements = new List<IStatement>();
         statements.AddRange(CreateNodesStatements());
@@ -46,7 +46,7 @@ public class MultiStatementCypherCompiler
         return node;
     }
 
-    internal IEnumerable<IStatement> CreateNodesStatements()
+    public IEnumerable<IStatement> CreateNodesStatements()
     {
         CheckIfNotNull(_statementFactory, "StatementFactory");
 
@@ -61,7 +61,7 @@ public class MultiStatementCypherCompiler
         return statements;
     }
 
-    internal bool HasStatementDependentOnNewNode()
+    public bool HasStatementDependentOnNewNode()
     {
         foreach (var builder in _newRelationshipBuilders)
         {
@@ -85,19 +85,19 @@ public class MultiStatementCypherCompiler
         }
     }
 
-    internal RelationshipBuilder NewRelationship(string type)
+    public RelationshipBuilder NewRelationship(string type)
     {
         return NewRelationship(type, false);
     }
 
-    internal RelationshipBuilder ExistingRelationship(long relId, string type)
+    public RelationshipBuilder ExistingRelationship(long relId, string type)
     {
         var relationshipBuilder = new RelationshipBuilder(type, relId);
         _existingRelationshipBuilders.Add(relationshipBuilder);
         return relationshipBuilder;
     }
 
-    internal RelationshipBuilder NewRelationship(string type, bool mapBothDirections)
+    public RelationshipBuilder NewRelationship(string type, bool mapBothDirections)
     {
         var relationshipBuilder = new RelationshipBuilder(type, mapBothDirections);
         _newRelationshipBuilders.Add(relationshipBuilder);

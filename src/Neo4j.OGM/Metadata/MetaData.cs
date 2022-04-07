@@ -6,7 +6,7 @@ namespace Neo4j.OGM.Metadata;
 /// <summary>
 /// Metadata for a domain model, contains <see cref="ISchema"> for graph based on supplied assemblies.
 /// </summary>
-internal class MetaData
+public class MetaData
 {
     /// <summary>
     /// Representation of graph schema obtained from the DomainInfo instance.
@@ -20,7 +20,7 @@ internal class MetaData
     /// MetaData constructor.
     /// </summary>
     /// <param name="assemblies">Assemblies containing domain model.</param>
-    internal MetaData(params Assembly[] assemblies)
+    public MetaData(params Assembly[] assemblies)
     {
         _domainInfo = new DomainInfo(assemblies);
         Schema = new SchemaBuilder(_domainInfo).Build();

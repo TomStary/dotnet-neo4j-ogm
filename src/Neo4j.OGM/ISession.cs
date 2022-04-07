@@ -1,5 +1,4 @@
 using Neo4j.Driver;
-using Neo4j.OGM.Metadata;
 
 namespace Neo4j.OGM;
 
