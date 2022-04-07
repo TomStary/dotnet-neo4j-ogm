@@ -144,7 +144,7 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
             EntityProjectionExpression _ => extensionExpression,
             EntityShaperExpression entityShaperExpression => EntityShaperVisit(entityShaperExpression),
             ProjectionBindingExpression projectionBindingExpression => ProjectionBindingVisit(projectionBindingExpression),
-            _ => QueryCompilationContext.NotTranslatedExpression,
+            _ => throw new InvalidOperationException("Unsupported operation."),
         };
     }
 

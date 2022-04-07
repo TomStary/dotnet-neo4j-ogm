@@ -1,6 +1,6 @@
 using Neo4j.OGM.Annotations;
 
-namespace Neo4j.OGM.Metadata.Schema;
+namespace Neo4j.OGM.Metadata.Schemas;
 
 public class Relationship : IRelationship
 {
@@ -15,15 +15,5 @@ public class Relationship : IRelationship
         Direction = direction;
         StartNode = start;
         EndNode = end;
-    }
-
-    public INode Other(INode node)
-    {
-        throw new NotImplementedException();
-    }
-
-    public INode Start()
-    {
-        throw new NotImplementedException();
     }
 }

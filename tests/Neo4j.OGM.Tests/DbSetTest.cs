@@ -1,3 +1,4 @@
+using System.Reflection;
 using Neo4j.Driver;
 using Neo4j.OGM.Tests.TestModels;
 
@@ -8,9 +9,12 @@ public class DbSetTest
     [Fact]
     public async Task FindAsync_ObjectFound()
     {
-        var sessionFactory = new SessionFactory("neo4j+s://4b101c70.databases.neo4j.io", AuthTokens.Basic("neo4j", ""), typeof(Person).Assembly);
+        var assembly = new Moq.Mock<Assembly>();
+        assembly.Setup(a => a.GetTypes()).Returns(new[] { typeof(SimplePerson) });
 
-        var session = sessionFactory.CreateSession();
+        var sessionFactory = new SessionFactory("bolt://localhost:11007", AuthTokens.Basic("neo4j", "rootroot"), assembly.Object);
+
+        var session = sessionFactory.Create();
 
         Assert.NotNull(session);
 
@@ -20,17 +24,59 @@ public class DbSetTest
             Name = "John Doe"
         };
 
-        var driver = GraphDatabase.Driver("neo4j+s://4b101c70.databases.neo4j.io", AuthTokens.Basic("neo4j", ""));
+        await session.SaveAsync(model);
 
-        using var sess = driver.AsyncSession();
-        var cursor = await sess.RunAsync("MATCH (n) RETURN n LIMIT 1");
-        var res = await cursor.FetchAsync();
-        var item = cursor.Current;
-
-        // await session.SaveAsync(model);
-
-        var person = await session.Set<Person>().FindAsync(1);
+        var person = await session.Set<SimplePerson>().FindAsync(1);
 
         Assert.NotNull(person);
+    }
+
+    [Fact]
+    public async Task FindAsync_NullOnNotFound()
+    {
+        var assembly = new Moq.Mock<Assembly>();
+        assembly.Setup(a => a.GetTypes()).Returns(new[] { typeof(SimplePerson) });
+
+        var sessionFactory = new SessionFactory("bolt://localhost:11007", AuthTokens.Basic("neo4j", "rootroot"), assembly.Object);
+
+        var session = sessionFactory.Create();
+
+        Assert.NotNull(session);
+
+        var person = await session.Set<SimplePerson>().FindAsync(-1);
+
+        Assert.Null(person);
+    }
+
+    [Fact]
+    public async Task FindAsync_NullKey_NullResult()
+    {
+        var assembly = new Moq.Mock<Assembly>();
+        assembly.Setup(a => a.GetTypes()).Returns(new[] { typeof(SimplePerson) });
+
+        var sessionFactory = new SessionFactory("bolt://localhost:11007", AuthTokens.Basic("neo4j", "rootroot"), assembly.Object);
+
+        var session = sessionFactory.Create();
+
+        Assert.NotNull(session);
+
+        var person = await session.Set<SimplePerson>().FindAsync(null);
+
+        Assert.Null(person);
+    }
+
+    [Fact]
+    public async Task FindAsync_IncorectKeyCount()
+    {
+        var assembly = new Moq.Mock<Assembly>();
+        assembly.Setup(a => a.GetTypes()).Returns(new[] { typeof(SimplePerson) });
+
+        var sessionFactory = new SessionFactory("bolt://localhost:11007", AuthTokens.Basic("neo4j", "rootroot"), assembly.Object);
+
+        var session = sessionFactory.Create();
+
+        Assert.NotNull(session);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => session.Set<SimplePerson>().FindAsync(1, 2, 3));
     }
 }

@@ -8,7 +8,7 @@ using Neo4j.OGM.Metadata;
 
 namespace Neo4j.OGM.Context;
 
-public class EntityGraphMapper : IEntityMapper
+internal class EntityGraphMapper : IEntityMapper
 {
     private MetaData _metadata;
     private readonly MappingContext _mappingContext;
@@ -108,12 +108,11 @@ public class EntityGraphMapper : IEntityMapper
         {
             var type = relationship.GetRelationshipType();
             var direction = relationship.GetRelationshipDirection();
-            var startNodeType = relationship.DeclaringType;
             var endNodeType = relationship.GetEndNodeType();
 
             var directedRelationship = new DirectedRelationship(type, direction);
 
-            var relatedObject = startNodeType?.GetValue(entity);
+            var relatedObject = entity;
             if (relatedObject != null)
             {
                 if (relationship?.DeclaringType?.HasRelationshipEntityAttribute() ?? false)
@@ -124,7 +123,7 @@ public class EntityGraphMapper : IEntityMapper
                     }
                 }
 
-                var relNodes = new RelationshipNodes(entity, relatedObject, startNodeType, endNodeType);
+                var relNodes = new RelationshipNodes(entity, relatedObject, entity.GetType(), endNodeType);
                 Link(directedRelationship, nodeBuilder, horizon, entity.Equals(relatedObject), relNodes);
             }
         }

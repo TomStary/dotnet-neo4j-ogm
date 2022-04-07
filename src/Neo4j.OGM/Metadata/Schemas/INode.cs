@@ -1,4 +1,4 @@
-namespace Neo4j.OGM.Metadata.Schema;
+namespace Neo4j.OGM.Metadata.Schemas;
 
 public interface INode
 {

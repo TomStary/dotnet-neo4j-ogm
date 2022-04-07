@@ -3,18 +3,18 @@ using Neo4j.OGM.Annotations;
 using Neo4j.OGM.Internals.Extensions;
 using static Neo4j.OGM.Annotations.RelationshipAttribute;
 
-namespace Neo4j.OGM.Metadata.Schema;
+namespace Neo4j.OGM.Metadata.Schemas;
 
 public class SchemaBuilder
 {
     private readonly DomainInfo _domainInfo;
 
-    private readonly SchemaObj _schema;
+    private readonly Schema _schema;
 
     public SchemaBuilder(DomainInfo domainInfo)
     {
         _domainInfo = domainInfo;
-        _schema = new SchemaObj();
+        _schema = new Schema();
     }
 
     public ISchema Build()
@@ -56,28 +56,29 @@ public class SchemaBuilder
     {
         foreach (var member in type.GetMembers())
         {
-            if (member.GetCustomAttributes().OfType<RelationshipAttribute>().Any())
+            if (member.GetCustomAttributes().OfType<RelationshipAttribute>().Any()
+                && member is PropertyInfo propertyInfo)
             {
-                var relationshipAttribute = member.GetCustomAttributes().OfType<RelationshipAttribute>().First();
+                var relationshipAttribute = propertyInfo.GetCustomAttributes().OfType<RelationshipAttribute>().First();
                 var relationshipType = relationshipAttribute.Type;
                 var direction = relationshipAttribute.Direction;
                 var fromNode = _schema.FindNode(type.GetNeo4jName());
                 INode toNode;
 
-                if (member.GetType().HasRelationshipEntityAttribute())
+                if (propertyInfo.GetType().HasRelationshipEntityAttribute())
                 {
                     if (direction == DirectionEnum.Outgoing)
                     {
-                        toNode = _schema.FindNode(member.GetType().GetEndNode().GetType().GetNeo4jName());
+                        toNode = _schema.FindNode(propertyInfo.GetType().GetEndNode().GetType().GetNeo4jName());
                     }
                     else
                     {
-                        toNode = _schema.FindNode(member.GetType().GetStartNode().GetType().GetNeo4jName());
+                        toNode = _schema.FindNode(propertyInfo.GetType().GetStartNode().GetType().GetNeo4jName());
                     }
                 }
                 else
                 {
-                    toNode = _schema.FindNode(member.GetType().GetNeo4jName());
+                    toNode = _schema.FindNode(propertyInfo.GetImplementedType().GetNeo4jName());
                 }
 
                 var relationship = new Relationship(relationshipType, direction, fromNode, toNode);
@@ -89,11 +90,14 @@ public class SchemaBuilder
 
     private INode GetNodeByField(MemberInfo member)
     {
-        var classType = member.GetType();
-
-        if (classType != null)
+        if (member is PropertyInfo property)
         {
-            return _schema.FindNode(classType.GetNeo4jName());
+            var classType = property.PropertyType;
+
+            if (classType != null)
+            {
+                return _schema.FindNode(classType.GetNeo4jName());
+            }
         }
 
         throw new Exception("Could not find node for relationship class."); // TODO: custom exception

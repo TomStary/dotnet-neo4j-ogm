@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+using System.Reflection;
 using Neo4j.Driver;
 using Neo4j.OGM.Tests.TestModels;
 
@@ -9,10 +9,12 @@ public class SessionTest
     [Fact]
     public async Task AddShallowNodeAsync()
     {
-        // TODO: Create fixture as this is singleton
-        var sessionFactory = new SessionFactory("neo4j+s://4b101c70.databases.neo4j.io", AuthTokens.Basic("neo4j", "password"), typeof(Person).Assembly);
+        var assembly = new Moq.Mock<Assembly>();
+        assembly.Setup(a => a.GetTypes()).Returns(new[] { typeof(Person), typeof(Post) });
 
-        var session = sessionFactory.CreateSession();
+        var sessionFactory = new SessionFactory("bolt://localhost:11007", AuthTokens.Basic("neo4j", "rootroot"), assembly.Object);
+
+        var session = sessionFactory.Create();
 
         Assert.NotNull(session);
 

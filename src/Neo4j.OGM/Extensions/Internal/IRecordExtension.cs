@@ -1,6 +1,8 @@
+using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using Neo4j.Driver;
+using Neo4j.OGM.Internals.Extensions;
 
 namespace Neo4j.OGM.Extensions.Internals;
 
@@ -19,7 +21,7 @@ internal static class IRecordExtension
             {
                 property.SetValue(entity, Convert.ChangeType(((IEntity)record[alias]).Id, propertyType));
             }
-            else
+            else if (((IEntity)record[alias]).Properties.ContainsKey(propertyName))
             {
                 var propertyValue = ((IEntity)record[alias])[propertyName];
                 if (propertyValue != null)

@@ -1,6 +1,4 @@
 using System.Linq.Expressions;
-using Neo4j.Driver;
-using Neo4j.OGM.Metadata;
 using Neo4j.OGM.Queries.Internal;
 
 namespace Neo4j.OGM.Queries;
@@ -33,16 +31,5 @@ public class QueryCompilationContext
         {
             _ = true; // maybe implementation
         }
-    }
-
-    public static readonly Expression NotTranslatedExpression = new NotTranslatedExpressionType();
-
-    private sealed class NotTranslatedExpressionType : Expression
-    {
-        public override Type Type
-            => typeof(object);
-
-        public override ExpressionType NodeType
-            => ExpressionType.Extension;
     }
 }

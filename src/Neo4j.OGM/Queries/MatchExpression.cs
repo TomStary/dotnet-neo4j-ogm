@@ -11,6 +11,8 @@ internal class MatchExpression : Expression
 
     public CypherExpression? Predicate { get; private set; }
 
+    public IEnumerable<CypherExpression> RelationshipExpressions { get; private set; }
+
     private readonly Expression _projectionMapping = null!;
 
     public override Type Type
@@ -48,5 +50,10 @@ internal class MatchExpression : Expression
     internal Expression GetMappedProjection()
     {
         return _projectionMapping;
+    }
+
+    internal void ApplyRelationshipPredicates(IEnumerable<CypherExpression> relationshipExpressions)
+    {
+        RelationshipExpressions = relationshipExpressions;
     }
 }

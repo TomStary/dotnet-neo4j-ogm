@@ -16,24 +16,16 @@ public class Session : ISession
     private readonly SessionSaveDelegate _saveDelegate;
     private readonly MappingContext _mappingContext;
 
-    public MetaData Metadata => _metadata;
+    internal MetaData Metadata => _metadata;
 
     internal MappingContext MappingContext => _mappingContext;
 
-    public Session(MetaData metadata, IDriver driver)
+    internal Session(MetaData metadata, IDriver driver)
     {
         _metadata = metadata;
         _driver = driver;
         _saveDelegate = new SessionSaveDelegate(this);
         _mappingContext = new MappingContext(metadata);
-    }
-
-    public Session(string connectionString, params Assembly[] assemblies)
-    {
-        _metadata = new MetaData(assemblies);
-        _driver = GraphDatabase.Driver(connectionString);
-        _saveDelegate = new SessionSaveDelegate(this);
-        _mappingContext = new MappingContext(_metadata);
     }
 
     public Task SaveAsync<TEntity>(TEntity entity) where TEntity : class

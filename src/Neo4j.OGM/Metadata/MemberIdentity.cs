@@ -22,13 +22,11 @@ public readonly struct MemberIdentity : IEquatable<MemberIdentity>
 
     public MemberInfo? MemberInfo
     {
-        [DebuggerStepThrough]
         get => _nameOrMember as MemberInfo;
     }
 
     public string? Name
     {
-        [DebuggerStepThrough]
         get => MemberInfo?.GetSimpleMemberName() ?? (string?)_nameOrMember;
     }
 

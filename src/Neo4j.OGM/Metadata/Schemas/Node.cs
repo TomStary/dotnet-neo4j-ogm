@@ -1,10 +1,10 @@
-namespace Neo4j.OGM.Metadata.Schema;
+namespace Neo4j.OGM.Metadata.Schemas;
 
 public class Node : INode
 {
     public string? Label { get; init; }
 
-    public Dictionary<string, IRelationship> Relationships => throw new NotImplementedException();
+    public Dictionary<string, IRelationship> Relationships => new();
 
     public Node(string? label)
     {

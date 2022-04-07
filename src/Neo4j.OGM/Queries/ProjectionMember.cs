@@ -12,7 +12,6 @@ public class ProjectionMember
         _memberChain = new List<MemberInfo>();
     }
 
-    [DebuggerStepThrough]
     public override bool Equals(object? obj)
             => obj != null
                 && (obj is ProjectionMember projectionMember

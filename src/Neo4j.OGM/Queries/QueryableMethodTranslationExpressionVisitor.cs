@@ -88,6 +88,7 @@ internal class QueryableMethodTranslationExpressionVisitor : ExpressionVisitor
 
         var matchExpression = (MatchExpression)source.QueryExpression;
         matchExpression.ApplyLimit(TranslateExpression(Expression.Constant(1)));
+        matchExpression.ApplyRelationshipPredicates(Array.Empty<CypherExpression>());
         return source.ShaperExpression.Type != returnType
             ? source.UpdateShaperExpression(Expression.Convert(source.ShaperExpression, returnType))
             : source;

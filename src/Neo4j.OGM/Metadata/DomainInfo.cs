@@ -3,6 +3,10 @@ using Neo4j.OGM.Internals.Extensions;
 
 namespace Neo4j.OGM.Metadata;
 
+/// <summary>
+/// This class contains two Dictionaries of types, one for all node classes and one for replationship classes.
+/// These can be used to further scan doman model and create <see cref="MetaData">.
+/// </summary>
 public class DomainInfo
 {
     public readonly Dictionary<string, Type> NodeClasses;

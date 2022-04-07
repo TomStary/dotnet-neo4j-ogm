@@ -5,7 +5,7 @@ using Neo4j.OGM.Utils;
 
 namespace Neo4j.OGM.Context;
 
-public class MappingContext
+internal class MappingContext
 {
     private readonly Dictionary<object, long> primaryIdToNativeId = new();
     private readonly MetaData _metaData;

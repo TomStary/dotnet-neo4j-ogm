@@ -7,19 +7,17 @@ namespace Neo4j.OGM.Internals.Extensions;
 
 internal static class TypeExtensions
 {
+    /// <summary>
+    /// Check if given <see cref="Type" does have the <see cref="NodeAttribute"> applied as custom attribute.
+    /// </summary>
     internal static bool HasNodeAttribute(this Type type)
-    {
-        var attrs = type.GetCustomAttributes();
+        => type.GetCustomAttributes().Any(attribute => attribute is NodeAttribute);
 
-        return attrs.Any(attribute => attribute is NodeAttribute);
-    }
-
+    /// <summary>
+    /// Check if given <see cref="Type" does have the <see cref="RelationshipEntityAttribute"> applied as custom attribute.
+    /// </summary>
     internal static bool HasRelationshipEntityAttribute(this Type type)
-    {
-        var attrs = type.GetCustomAttributes();
-
-        return attrs.Any(attribute => attribute is RelationshipEntityAttribute);
-    }
+        => type.GetCustomAttributes().Any(attribute => attribute is RelationshipEntityAttribute);
 
     /// <summary>
     /// Returns Neo4j name for Node or Relationship class.
@@ -102,6 +100,30 @@ internal static class TypeExtensions
         var members = type.GetMembers();
 
         return members.Where(member => member.GetCustomAttributes().OfType<RelationshipAttribute>().Any());
+    }
+
+    //cc: https://stackoverflow.com/a/17713382 changed to extension and changed code style
+    public static Type GetAnyElementType(this Type type)
+    {
+        // Type is Array
+        // short-circuit if you expect lots of arrays
+        if (type.IsArray)
+        {
+            return type.GetElementType();
+        }
+
+        // type is IEnumerable<T>;
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+        {
+            return type.GetGenericArguments()[0];
+        }
+
+        // type implements/extends IEnumerable<T>;
+        var enumType = type.GetInterfaces()
+                                .Where(t => t.IsGenericType &&
+                                       t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                                .Select(t => t.GenericTypeArguments[0]).FirstOrDefault();
+        return enumType ?? type;
     }
 
     internal static string GetRelationshipType(this MemberInfo member)

@@ -5,8 +5,6 @@ namespace Neo4j.OGM;
 
 public interface ISession : IDisposable
 {
-    MetaData Metadata { get; }
-
     Task SaveAsync<TEntity>(TEntity entity) where TEntity : class;
 
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
