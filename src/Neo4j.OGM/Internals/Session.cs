@@ -33,6 +33,9 @@ public class Session : ISession
         _entityGraphMapper = entityGraphMapper;
     }
 
+    /// <summary>
+    /// Save entity or list of entities to the database.
+    /// </summary>
     public async Task SaveAsync<TEntity>(TEntity entity) where TEntity : class
     {
         CheckDisposed();

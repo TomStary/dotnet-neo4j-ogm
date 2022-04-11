@@ -99,7 +99,7 @@ internal class ShapedQueryCompilingExpressionVisitor : ExpressionVisitor
         var enumerator = asyncEnumerable.GetAsyncEnumerator(cancellationToken);
         await using var _ = enumerator.ConfigureAwait(false);
 
-        if (!(await enumerator.MoveNextAsync().ConfigureAwait(false)))
+        if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
         {
             return default!;
         }

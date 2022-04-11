@@ -10,7 +10,6 @@ public class CompilerContext : ICompilerContext
     private Dictionary<long, object> _createdOnjectsWithId = new();
     private HashSet<object> _registry = new();
     private readonly IMultiStatementCypherCompiler _compiler;
-
     public IMultiStatementCypherCompiler Compiler => _compiler;
 
     public CompilerContext(IMultiStatementCypherCompiler compiler)

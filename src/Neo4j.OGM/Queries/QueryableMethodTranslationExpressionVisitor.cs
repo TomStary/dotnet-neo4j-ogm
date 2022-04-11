@@ -120,16 +120,4 @@ internal class QueryableMethodTranslationExpressionVisitor : ExpressionVisitor
         return ReplacingExpressionVisitor.Replace(
             lambdaExpression.Parameters.Single(), expression.ShaperExpression, lambdaExpression.Body)!;
     }
-
-    private class TestExpression : Expression
-    {
-        private MatchExpression _queryExpression;
-        private Expression _expression;
-
-        public TestExpression(MatchExpression queryExpression, Expression expression)
-        {
-            _queryExpression = queryExpression;
-            _expression = expression;
-        }
-    }
 }
