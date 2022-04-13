@@ -45,6 +45,21 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
         return null;
     }
 
+    protected override Expression? VisitMember(MemberExpression memberExpression)
+    {
+        var innerExpression = Visit(memberExpression.Expression);
+
+        if (innerExpression == null)
+        {
+            throw new InvalidOperationException("Translation failed");
+        }
+
+        return TryBindMember(innerExpression, MemberIdentity.Create(memberExpression.Member))
+            ?? (TranslationFailed(memberExpression.Expression, innerExpression, out var cypherInnerExpression)
+                    ? null
+                    : cypherInnerExpression);
+    }
+
     protected override Expression? VisitBinary(BinaryExpression binaryExpression)
     {
         if (binaryExpression.NodeType == ExpressionType.Coalesce)
@@ -142,6 +157,7 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
         {
             CypherExpression _ => extensionExpression,
             EntityProjectionExpression _ => extensionExpression,
+            EntityReferenceExpression _ => extensionExpression,
             EntityShaperExpression entityShaperExpression => EntityShaperVisit(entityShaperExpression),
             ProjectionBindingExpression projectionBindingExpression => ProjectionBindingVisit(projectionBindingExpression),
             _ => throw new InvalidOperationException("Unsupported operation."),

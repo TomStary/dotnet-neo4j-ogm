@@ -2,7 +2,7 @@ using Neo4j.OGM.Internals.Extensions;
 
 namespace Neo4j.OGM.Context;
 
-internal class IndentityMap
+internal class IdentityMap
 {
     private const long SEED = 0xBAAAAAFL;
     private Dictionary<long, long> _nodeHashes = new();

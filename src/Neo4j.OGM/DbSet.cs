@@ -1,5 +1,6 @@
 using System.Collections;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using Neo4j.OGM.Extensions.Internals;
@@ -11,15 +12,20 @@ namespace Neo4j.OGM;
 
 public class DbSet<TEntity> : IQueryable<TEntity>, IAsyncEnumerable<TEntity> where TEntity : class
 {
+#pragma warning disable IDE0052 // TODO: Remove pragma if it becomes obsolete.
     private readonly ISession _session;
+#pragma warning restore IDE0052
     private readonly EntityQueryProvider _provider;
-
-    public Type ElementType => EntityQueryable.ElementType;
-    public Expression Expression => EntityQueryable.Expression;
-    public IQueryProvider Provider => _provider;
-
     private readonly EntityQueryable<TEntity> _queryable;
     private EntityQueryable<TEntity> EntityQueryable => _queryable;
+
+    [ExcludeFromCodeCoverage]
+    public Type ElementType => EntityQueryable.ElementType;
+
+    [ExcludeFromCodeCoverage]
+    public Expression Expression => EntityQueryable.Expression;
+
+    public IQueryProvider Provider => _provider;
 
     Expression IQueryable.Expression
             => EntityQueryable.Expression;
@@ -61,10 +67,13 @@ public class DbSet<TEntity> : IQueryable<TEntity>, IAsyncEnumerable<TEntity> whe
         );
     }
 
+    [ExcludeFromCodeCoverage]
     IEnumerator<TEntity> IEnumerable<TEntity>.GetEnumerator() => EntityQueryable.GetEnumerator();
 
+    [ExcludeFromCodeCoverage]
     IEnumerator IEnumerable.GetEnumerator() => EntityQueryable.GetEnumerator();
 
+    [ExcludeFromCodeCoverage]
     IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetAsyncEnumerator(CancellationToken cancellationToken)
         => EntityQueryable.GetAsyncEnumerator(cancellationToken);
 }

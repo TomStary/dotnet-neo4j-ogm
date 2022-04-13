@@ -80,11 +80,6 @@ public class EntityGraphMapper : IEntityMapper
         var id = _mappingContext.NativeId(entity);
         context.VisitRelationshipEntity(id);
 
-        if (id < 0)
-        {
-            context.RegisterNewObject(id, entity);
-        }
-
         UpdateFieldOnBuilder(entity, relationshipBuilder, type);
     }
 
@@ -222,7 +217,6 @@ public class EntityGraphMapper : IEntityMapper
 
         if (_mappingContext.HasChanges(relationshipEntity))
         {
-            context.Register(relationshipEntity);
             if (tgtId >= 0 && srcId >= 0)
             {
                 var mappedRelationship = CreateMappedRelationship(relationshipBuilder, nodes);
@@ -386,12 +380,7 @@ public class EntityGraphMapper : IEntityMapper
     {
         if (_mappingContext.HasChanges(entity))
         {
-            context.Register(entity);
             UpdatePropertiesOnBuilder(entity, nodeBuilder);
-        }
-        else
-        {
-            context.Unregister(entity);
         }
     }
 
@@ -409,7 +398,7 @@ public class EntityGraphMapper : IEntityMapper
         nodeBuilder.SetProperties();
     }
 
-    private NodeBuilder NewNodeBuilder(object entity, int depth)
+    private NodeBuilder NewNodeBuilder(object entity, int horizon)
     {
         var context = _compiler.Context;
 
@@ -421,13 +410,14 @@ public class EntityGraphMapper : IEntityMapper
         if (id < 0)
         {
             nodeBuilder = _compiler.CreateNode(id).AddLabels(labels);
-            context.RegisterNewObject(id, entity);
         }
         else
         {
             nodeBuilder = _compiler.ExistingNode(id);
             nodeBuilder.AddLabels(labels);
         }
+
+        context.Visit(entity, nodeBuilder, horizon);
 
         return nodeBuilder;
     }

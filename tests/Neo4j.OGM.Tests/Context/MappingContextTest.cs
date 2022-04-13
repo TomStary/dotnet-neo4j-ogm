@@ -20,7 +20,7 @@ public class MappingContextTest
         mappingContext.NativeId(entity);
 
         Assert.NotNull(entity.Id);
-        Assert.Equal(-1, entity.Id);
+        Assert.InRange(entity.Id!.Value, long.MinValue, -1);
     }
 
     [Fact]

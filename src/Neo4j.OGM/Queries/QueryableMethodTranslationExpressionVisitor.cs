@@ -108,7 +108,10 @@ internal class QueryableMethodTranslationExpressionVisitor : ExpressionVisitor
     }
 
     private CypherExpression? TranslateLambdaExpression(ShapedQueryExpression source, LambdaExpression predicate)
-        => TranslateExpression(RemapLambdaBody(source, predicate));
+    {
+        var lambdaBody = TranslateExpression(RemapLambdaBody(source, predicate));
+        return lambdaBody;
+    }
 
     private CypherExpression? TranslateExpression(Expression expression)
     {

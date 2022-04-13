@@ -9,7 +9,7 @@ public class MappingContext
     private readonly Dictionary<object, long> primaryIdToNativeId = new();
     private readonly MetaData _metaData;
     private readonly IEnumerable<MappedRelationship> _relationshipRegister = new List<MappedRelationship>();
-    private IndentityMap _indentityMap = new();
+    private IdentityMap _indentityMap = new();
 
     public MappingContext(MetaData metaData)
     {

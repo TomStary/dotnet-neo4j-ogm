@@ -1,4 +1,3 @@
-using Neo4j.OGM.Annotations;
 using Neo4j.OGM.Cypher.Compilers.Statements;
 using Neo4j.OGM.Requests;
 
@@ -77,14 +76,6 @@ public class MultiStatementCypherCompiler : IMultiStatementCypherCompiler
         return false;
     }
 
-    private static void CheckIfNotNull(IStatementFactory statementFactory, string name)
-    {
-        if (statementFactory == null)
-        {
-            throw new ArgumentNullException(name);
-        }
-    }
-
     public RelationshipBuilder NewRelationship(string type)
     {
         return NewRelationship(type, false);
@@ -102,5 +93,13 @@ public class MultiStatementCypherCompiler : IMultiStatementCypherCompiler
         var relationshipBuilder = new RelationshipBuilder(type, mapBothDirections);
         _newRelationshipBuilders.Add(relationshipBuilder);
         return relationshipBuilder;
+    }
+
+    private static void CheckIfNotNull(IStatementFactory statementFactory, string name)
+    {
+        if (statementFactory == null)
+        {
+            throw new ArgumentNullException(name);
+        }
     }
 }
