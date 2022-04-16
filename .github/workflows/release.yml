@@ -22,4 +22,6 @@ jobs:
       - name: Create the package
         run: dotnet pack --configuration Release ./src/Neo4j.OGM /p:Version=${GITHUB_REF/refs\/tags\//}
       - name: Publish the package to GPR
-        run: dotnet nuget push ./src/Neo4j.OGM/bin/Release/*.nupkg
+        run: dotnet nuget push ./src/Neo4j.OGM/bin/Release/*.nupkg --api-key ${NUGET_TOKEN}
+        env:
+         NUGET_TOKEN: ${{secrets.NUGET_TOKEN}}
