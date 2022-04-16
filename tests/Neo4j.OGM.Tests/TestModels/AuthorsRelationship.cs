@@ -9,6 +9,8 @@ public class AuthorsRelationship
     [Key]
     public long? Id { get; set; }
 
+    public DateTime CreatedAt = DateTime.UtcNow;
+
     [StartNode]
     public Author Author { get; set; } = null!;
 

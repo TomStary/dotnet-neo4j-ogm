@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace Neo4j.OGM.Queries;
@@ -22,20 +23,24 @@ internal class ShapedQueryExpression : Expression
         ResultCardinality = resultCardinality;
     }
 
-    internal Expression Update(Expression expression, Expression shaperExpression)
+    internal Expression Update(Expression queryExpression, Expression shaperExpression)
     {
-        throw new NotImplementedException();
+        return queryExpression != QueryExpression || shaperExpression != ShaperExpression
+            ? new ShapedQueryExpression(queryExpression, shaperExpression, ResultCardinality)
+            : this;
     }
 
     public Expression QueryExpression { get; }
     public Expression ShaperExpression { get; }
     public ResultCardinality ResultCardinality { get; }
 
+    [ExcludeFromCodeCoverage]
     public override Type Type
             => ResultCardinality == ResultCardinality.Enumerable
                 ? typeof(IQueryable<>).MakeGenericType(ShaperExpression.Type)
                 : ShaperExpression.Type;
 
+    [ExcludeFromCodeCoverage]
     public sealed override ExpressionType NodeType
            => ExpressionType.Extension;
 

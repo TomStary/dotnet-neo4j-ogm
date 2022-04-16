@@ -32,15 +32,12 @@ internal class MethodCallTranslator
             right = arguments[1];
         }
 
-        if (left != null
-            && right != null)
-        {
-            return (right.Type == typeof(object) && (right is CypherParameterExpression || right is CypherConstantExpression))
+        return left != null
+            && right != null
+            ? (right.Type == typeof(object) && (right is CypherParameterExpression || right is CypherConstantExpression))
                 || (left.Type == typeof(object) && (left is CypherParameterExpression || left is CypherConstantExpression))
                     ? _cypherExpressionFactory.Equal(left, right)
-                    : _cypherExpressionFactory.Constant(false);
-        }
-
-        return null;
+                    : _cypherExpressionFactory.Constant(false)
+            : throw new InvalidOperationException("Translation failed");
     }
 }

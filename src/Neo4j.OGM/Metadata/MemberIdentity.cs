@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Diagnostics.Tracing;
 using System.Reflection;
 using Neo4j.OGM.Extensions.Internals;
 
@@ -8,16 +6,12 @@ namespace Neo4j.OGM.Metadata;
 public readonly struct MemberIdentity : IEquatable<MemberIdentity>
 {
     private readonly object? _nameOrMember;
+
     public static readonly MemberIdentity None = new((object?)null);
 
     public MemberIdentity(object? nameOrMember)
     {
         _nameOrMember = nameOrMember;
-    }
-
-    public bool Equals(MemberIdentity other)
-    {
-        throw new NotImplementedException();
     }
 
     public MemberInfo? MemberInfo
@@ -34,4 +28,14 @@ public readonly struct MemberIdentity : IEquatable<MemberIdentity>
 
     public static MemberIdentity Create(string? name)
             => name == null ? None : new MemberIdentity(name);
+
+    public bool Equals(MemberIdentity other)
+    {
+        if (MemberInfo != null)
+        {
+            return MemberInfo == other.MemberInfo;
+        }
+
+        return Name == other.Name;
+    }
 }

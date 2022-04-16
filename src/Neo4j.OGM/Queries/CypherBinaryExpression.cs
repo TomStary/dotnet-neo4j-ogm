@@ -23,7 +23,7 @@ internal class CypherBinaryExpression : CypherExpression
         => AllowedOperators.Contains(operatorType);
 
     public CypherBinaryExpression(ExpressionType operatorType, CypherExpression left, CypherExpression right, Type type)
-        : base(type, null)
+        : base(type)
     {
         if (!IsValidOperator(operatorType))
         {

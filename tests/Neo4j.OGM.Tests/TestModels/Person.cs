@@ -15,5 +15,5 @@ public class Person
     [Relationship("AUTHORS", DirectionEnum.Outgoing)]
     public IEnumerable<Post> Posts { get; set; } = new List<Post>();
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

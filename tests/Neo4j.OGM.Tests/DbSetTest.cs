@@ -7,7 +7,7 @@ using Neo4j.OGM.Tests.TestModels;
 
 namespace Neo4j.OGM.Tests;
 
-public class DbSetTest
+public partial class DbSetTest
 {
     [Fact]
     public async Task FindAsync_ObjectFound()
@@ -97,37 +97,5 @@ public class DbSetTest
         Assert.NotNull(session);
 
         await Assert.ThrowsAsync<ArgumentException>(() => session.Set<SimplePerson>().FindAsync((long)1, (long)2, (long)3));
-    }
-
-    private class PersonRecord : IRecord
-    {
-        public object this[int index] => throw new System.NotImplementedException();
-
-        public object this[string key] => Values[key];
-
-        public IReadOnlyDictionary<string, object> Values { get; }
-
-        public IReadOnlyList<string> Keys { get; }
-
-        public PersonRecord(IReadOnlyDictionary<string, object> values)
-        {
-            Values = values;
-            Keys = values.Keys.ToList();
-        }
-    }
-
-    private class PersonEntity : IEntity
-    {
-        public object this[string key] => Properties[key];
-
-        public IReadOnlyDictionary<string, object> Properties { get; }
-
-        public long Id { get; }
-
-        public PersonEntity(long key, IReadOnlyDictionary<string, object> properties)
-        {
-            Id = key;
-            Properties = properties;
-        }
     }
 }

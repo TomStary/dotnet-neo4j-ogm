@@ -1,13 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using Neo4j.OGM.Internals.Extensions;
 using Neo4j.OGM.Queries;
 using Neo4j.OGM.Utils;
 
 namespace Neo4j.OGM.Extensions.Internals;
 
+[ExcludeFromCodeCoverage]
 internal static class ExpressionExtensions
 {
     private static readonly MethodInfo ObjectEqualsMethodInfo
@@ -88,13 +88,19 @@ internal static class ExpressionExtensions
 
     public static TProperty Property<TProperty>(
         object entity,
-        [NotParameterized] string propertyName)
+        string propertyName)
         => throw new InvalidOperationException("OOF");
 
     public static bool IsNullConstantExpression(this Expression expression)
             => RemoveConvert(expression) is ConstantExpression constantExpression
                 && constantExpression.Value == null;
 
+    internal static LambdaExpression UnwrapLambdaFromQuote(this Expression expression)
+    {
+        return (LambdaExpression)(expression is UnaryExpression unary && expression.NodeType == ExpressionType.Quote
+                ? unary.Operand
+                : expression);
+    }
 
     private static Expression RemoveConvert(Expression expression)
     {
@@ -107,33 +113,4 @@ internal static class ExpressionExtensions
 
         return expression;
     }
-
-    public static readonly MethodInfo ValueBufferTryReadValueMethod
-            = typeof(ExpressionExtensions).GetRequiredDeclaredMethod(nameof(ValueBufferTryReadValue));
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static TValue ValueBufferTryReadValue<TValue>(
-#pragma warning disable IDE0060 // Remove unused parameter
-            in ValueBuffer valueBuffer,
-            int index,
-            PropertyInfo property)
-#pragma warning restore IDE0060 // Remove unused parameter
-            => (TValue)valueBuffer[index]!;
-
-    public static MethodInfo GetRequiredDeclaredMethod(this Type type, string name)
-        => type.GetTypeInfo().GetDeclaredMethod(name)
-            ?? throw new InvalidOperationException($"Could not find method '{name}' on type '{type}'");
-
-
-    public static Expression CreateValueBufferReadValueExpression(
-    this Expression valueBuffer,
-    Type type,
-    int index,
-    PropertyInfo? property)
-        => Expression.Call(
-            ValueBufferTryReadValueMethod.MakeGenericMethod(type),
-            valueBuffer,
-            Expression.Constant(index),
-            Expression.Constant(property, typeof(PropertyInfo)));
 }

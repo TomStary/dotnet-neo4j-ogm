@@ -1,8 +1,6 @@
-using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using Neo4j.Driver;
-using Neo4j.OGM.Internals.Extensions;
 
 namespace Neo4j.OGM.Extensions.Internals;
 

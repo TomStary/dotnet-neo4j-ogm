@@ -7,6 +7,9 @@ public interface IMultiStatementCypherCompiler
     CompilerContext Context { get; }
     NodeBuilder CreateNode(long id);
     IEnumerable<IStatement> CreateNodesStatements();
+    IEnumerable<IStatement> CreateRelationshipsStatements();
+    IEnumerable<IStatement> UpdateRelationshipsStatements();
+    IEnumerable<IStatement> UpdateNodesStatements();
     NodeBuilder ExistingNode(long id);
     RelationshipBuilder ExistingRelationship(long relId, string type);
     IEnumerable<IStatement> GetAllStatements();

@@ -94,7 +94,7 @@ internal static class TypeExtensions
             labels.Add(nodeAttribute.Label);
         }
 
-        return labels;
+        return labels.Distinct();
     }
 
     /// <summary>
@@ -181,11 +181,6 @@ internal static class TypeExtensions
         return type.GetProperties().FirstOrDefault(property => property.GetCustomAttributes().OfType<KeyAttribute>().Any());
     }
 
-    internal static bool HasPrimaryIndexAttribute(this Type type)
-    {
-        return type.GetProperties().Any(property => property.GetCustomAttributes().OfType<KeyAttribute>().Any());
-    }
-
     internal static PropertyInfo? FindProperty(this Type type, string propertyName)
     {
         return type.GetProperties().FirstOrDefault(property => property.Name == propertyName);
@@ -193,10 +188,6 @@ internal static class TypeExtensions
 
     internal static PropertyInfo? FindProperty(this Type type, MemberInfo property)
         => type.FindProperty(property.Name);
-
-    internal static PropertyInfo GetRequiredProperty(this Type type, string name)
-       => type.GetTypeInfo().GetProperty(name)
-           ?? throw new InvalidOperationException($"Could not find property '{name}' on type '{type}'");
 
     internal static object? GetKeyValue(this Type type, object entity)
     {
@@ -293,7 +284,6 @@ internal static class TypeExtensions
         }
     }
 
-
     internal static void SetKeyValue(this Type type, object entity, object id)
     {
         var keyAttribute = type.GetMemberInfoOfKeyAttribute();
@@ -311,7 +301,6 @@ internal static class TypeExtensions
     {
         return member.MemberType switch
         {
-            MemberTypes.Field => ((FieldInfo)member).GetValue(entity),
             MemberTypes.Property => ((PropertyInfo)member).GetValue(entity),
             _ => throw new NotImplementedException(),
         };
@@ -321,9 +310,6 @@ internal static class TypeExtensions
     {
         switch (member.MemberType)
         {
-            case MemberTypes.Field:
-                ((FieldInfo)member).SetValue(entity, value);
-                break;
             case MemberTypes.Property:
                 ((PropertyInfo)member).SetValue(entity, value);
                 break;
@@ -362,8 +348,4 @@ internal static class TypeExtensions
     // source https://github.com/dotnet/efcore
     internal static Type UnwrapNullableType(this Type type)
         => Nullable.GetUnderlyingType(type) ?? type;
-
-    internal static MethodInfo GetRequiredRuntimeMethod(this Type type, string name, params Type[] parameters)
-            => type.GetTypeInfo().GetRuntimeMethod(name, parameters)
-                ?? throw new InvalidOperationException($"Could not find method '{name}' on type '{type}'");
 }

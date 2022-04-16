@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Neo4j.OGM.Annotations;
 using Neo4j.OGM.Exceptions;
+using Neo4j.OGM.Response.Model;
 
 namespace Neo4j.OGM.Cypher.Compilers;
 
@@ -75,5 +76,22 @@ public class RelationshipBuilder
         }
 
         _properties.Add(new Tuple<string, object?>(name, value));
+    }
+
+    internal void Relate(long idSource, long idTarget)
+    {
+        SetStartNode(idSource);
+        SetEndNode(idTarget);
+    }
+
+    internal RelationshipModel RelationshipModel()
+    {
+        return new RelationshipModel(
+            _relId,
+            Type,
+            _startNodeId,
+            _endNodeId,
+            _properties.ToDictionary(x => x.Item1, x => x.Item2)
+        );
     }
 }

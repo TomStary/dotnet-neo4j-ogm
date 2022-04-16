@@ -1,25 +1,24 @@
+using System.Collections;
+using System.Reflection;
 using Neo4j.OGM.Annotations;
 using Neo4j.OGM.Cypher.Compilers;
 using Neo4j.OGM.Exceptions;
+using Neo4j.OGM.Extensions.Internals;
 using Neo4j.OGM.Internals.Extensions;
-using Neo4j.OGM.Metadata;
 using static Neo4j.OGM.Annotations.RelationshipAttribute;
 
 namespace Neo4j.OGM.Context;
 
 public class EntityGraphMapper : IEntityMapper
 {
-    private MetaData _metadata;
     private readonly MappingContext _mappingContext;
     private readonly IMultiStatementCypherCompiler _compiler;
     private int _currentDepth = 0;
 
     public EntityGraphMapper(
-        MetaData metadata,
         MappingContext mappingContext
     )
     {
-        _metadata = metadata;
         _mappingContext = mappingContext;
         _compiler = new MultiStatementCypherCompiler();
     }
@@ -47,8 +46,8 @@ public class EntityGraphMapper : IEntityMapper
                 throw new NullReferenceException("Missing value of end node for relationship.");
             }
 
-            var startNodeBuilder = MapEntity(startNode, depth);
-            var endNodeBuilder = MapEntity(endNode, depth);
+            var startNodeBuilder = MapEntity(startNode!, depth);
+            var endNodeBuilder = MapEntity(endNode!, depth);
 
             if (!_compiler.Context.VisitedRelationshipEntity(_mappingContext.NativeId(entity)))
             {
@@ -106,8 +105,13 @@ public class EntityGraphMapper : IEntityMapper
         return _compiler.Context;
     }
 
-    private NodeBuilder? MapEntity(object entity, int horizon)
+    private NodeBuilder? MapEntity(object? entity, int horizon)
     {
+        if (entity == null)
+        {
+            return null;
+        }
+
         if (entity.GetType().IsAbstract || entity.GetType().IsInterface)
         {
             return null;
@@ -149,19 +153,37 @@ public class EntityGraphMapper : IEntityMapper
 
             var directedRelationship = new DirectedRelationship(type, direction);
 
-            var relatedObject = entity;
+            var relatedObject = ((PropertyInfo)relationship).GetValue(entity);
             if (relatedObject != null)
             {
-                if (relationship?.DeclaringType?.HasRelationshipEntityAttribute() ?? false)
+                if (relationship?.GetType().GetAnyElementType().HasRelationshipEntityAttribute() ?? false)
                 {
-                    if (relationship.DeclaringType.GetNeo4jName() != type)
+                    if (relationship!.GetType().GetAnyElementType().GetNeo4jName() != type)
                     {
-                        directedRelationship = new DirectedRelationship(relationship.DeclaringType.GetNeo4jName(), direction);
+                        directedRelationship = new DirectedRelationship(relationship!.GetType().GetAnyElementType().GetNeo4jName(), direction);
                     }
                 }
 
                 var relNodes = new RelationshipNodes(entity, relatedObject, entity.GetType(), endNodeType);
-                Link(directedRelationship, nodeBuilder, horizon, entity.Equals(relatedObject), relNodes);
+                relNodes.SourceId = _mappingContext.NativeId(entity);
+                if (typeof(IEnumerable).IsAssignableFrom(relatedObject.GetType()))
+                {
+                    foreach (var tgtObject in (IEnumerable)relatedObject)
+                    {
+                        if (tgtObject == null)
+                        {
+                            throw new InvalidOperationException("Cannot map null value to relationship.");
+                        }
+                        relNodes.Target = tgtObject;
+                        Link(directedRelationship, nodeBuilder, horizon, entity.Equals(relatedObject), relNodes);
+
+                    }
+                }
+                else
+                {
+                    relNodes.TargetType = relatedObject.GetType();
+                    Link(directedRelationship, nodeBuilder, horizon, entity.Equals(relatedObject), relNodes);
+                }
             }
         }
         _ = Interlocked.Decrement(ref _currentDepth);
@@ -182,12 +204,16 @@ public class EntityGraphMapper : IEntityMapper
                     MapRelationshipEntity(relNodes.Target, relNodes.Source, relationshipBuilder, context, nodeBuilder, horizon, relNodes.SourceType, relNodes.TargetType);
                 }
             }
+            else
+            {
+                MapRelatedEntity(nodeBuilder, relationshipBuilder, _currentDepth, horizon, relNodes);
+            }
         }
     }
 
     private void MapRelationshipEntity(
         object relationshipEntity,
-        object parent,
+        object? parent,
         RelationshipBuilder relationshipBuilder,
         CompilerContext context,
         NodeBuilder nodeBuilder,
@@ -239,18 +265,23 @@ public class EntityGraphMapper : IEntityMapper
 
     private void MapRelatedEntity(NodeBuilder nodeBuilder, RelationshipBuilder relationshipBuilder, int level, int horizon, RelationshipNodes nodes)
     {
+        if (nodes.Source == null || nodes.Target == null)
+        {
+            throw new NullReferenceException("RelationshipNodes does not contain Target or Source object");
+        }
+
         var context = _compiler.Context;
-        var alreadyVisited = context.Visited(nodes.Target, horizon);
-        var selfReferentialUndirectedRel = relationshipBuilder.HasDirection(RelationshipAttribute.DirectionEnum.Undirected)
-            && nodes.Source.GetType() == nodes.Target.GetType();
+        var alreadyVisited = context.Visited(nodes.Target!, horizon);
+        var selfReferentialUndirectedRel = relationshipBuilder.HasDirection(DirectionEnum.Undirected)
+            && nodes.Source!.GetType() == nodes.Target!.GetType();
         var relationshipFromExplicitlyMappedObject = level == 1;
 
-        var tgtNodeBuilder = MapEntity(nodes.Target, horizon);
+        var tgtNodeBuilder = MapEntity(nodes.Target!, horizon);
 
         if (!alreadyVisited || !selfReferentialUndirectedRel || relationshipFromExplicitlyMappedObject)
         {
-            nodes.TargetId = _mappingContext.NativeId(nodes.Target);
-            UpdateRelationship(context, nodeBuilder, tgtNodeBuilder, relationshipBuilder, nodes);
+            nodes.TargetId = _mappingContext.NativeId(nodes.Target!);
+            UpdateRelationship(context, nodeBuilder, tgtNodeBuilder!, relationshipBuilder, nodes);
         }
     }
 
@@ -263,17 +294,90 @@ public class EntityGraphMapper : IEntityMapper
     {
         if (nodes.TargetId == null || nodes.SourceId == null)
         {
-            CreateRelationship(context, srcNodeBuilder.Id, relationshipBuilder,
-                tgtNodeBuilder.Id, nodes.SourceType, nodes.TargetType);
+            MaybeCreateRelationship(context,
+                                    srcNodeBuilder!.Id,
+                                    relationshipBuilder,
+                                    tgtNodeBuilder!.Id,
+                                    nodes.SourceType,
+                                    nodes.TargetType);
+        }
+        else
+        {
+            var mappedRelationship = CreateMappedRelationship(relationshipBuilder, nodes);
+            if (!_mappingContext.ContainsRelationship(mappedRelationship))
+            {
+                MaybeCreateRelationship(context,
+                                        srcNodeBuilder!.Id,
+                                        relationshipBuilder,
+                                        tgtNodeBuilder!.Id,
+                                        nodes.SourceType,
+                                        nodes.TargetType);
+            }
+            else
+            {
+                context.RegisterRelationship(mappedRelationship);
+            }
         }
     }
 
-    private void CreateRelationship(CompilerContext context, long id1, RelationshipBuilder relationshipBuilder, long id2, Type sourceType, Type targetType)
+    private void MaybeCreateRelationship(CompilerContext context,
+                                         long idSource,
+                                         RelationshipBuilder relationshipBuilder,
+                                         long idTarget,
+                                         Type sourceType,
+                                         Type targetType)
     {
-        throw new NotImplementedException("This method is not a part of POC.");
+        if (HasTransientRelationship(context, idSource, relationshipBuilder, idTarget))
+        {
+            if (relationshipBuilder.HasDirection(DirectionEnum.Undirected))
+            {
+                relationshipBuilder.Relate(idSource, idTarget);
+                context.RegisterTransientRelationship(
+                    new Tuple<long, long>(idSource, idTarget),
+                    new TransientRelationship(idSource, relationshipBuilder.Reference, relationshipBuilder.Type, idTarget, targetType, sourceType));
+            }
+            return;
+        }
+
+        if (relationshipBuilder.HasDirection(DirectionEnum.Incoming))
+        {
+            if (targetType.HasRelationshipEntityAttribute())
+            {
+                sourceType = targetType;
+                var start = ((PropertyInfo)targetType.GetStartNode()).PropertyType.GetAnyElementType();
+                targetType = start;
+
+            }
+            ReallyCreateRelationship(context, idTarget, relationshipBuilder, idSource, targetType, sourceType);
+        }
+        else
+        {
+            ReallyCreateRelationship(context, idSource, relationshipBuilder, idTarget, sourceType, targetType);
+        }
     }
 
-    private object CreateMappedRelationship(RelationshipBuilder relationshipBuilder, RelationshipNodes nodes)
+    private void ReallyCreateRelationship(CompilerContext context, long idSource, RelationshipBuilder relationshipBuilder, long idTarget, Type sourceType, Type targetType)
+    {
+        relationshipBuilder.Relate(idSource, idTarget);
+
+        context.RegisterTransientRelationship(
+            new Tuple<long, long>(idSource, idTarget),
+            new TransientRelationship(idSource, relationshipBuilder.Reference, relationshipBuilder.Type, idTarget, targetType, sourceType));
+    }
+
+    private bool HasTransientRelationship(CompilerContext context, long idSource, RelationshipBuilder relationshipBuilder, long idTarget)
+    {
+        foreach (var obj in context.GetTransientRelationships(new Tuple<long, long>(idSource, idTarget)))
+        {
+            if (obj is TransientRelationship)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private MappedRelationship CreateMappedRelationship(RelationshipBuilder relationshipBuilder, RelationshipNodes nodes)
     {
         var isRelEntity = relationshipBuilder.RelationshipEntity;
         MappedRelationship mappedRelationshipOutgoing = new MappedRelationship(
@@ -388,7 +492,7 @@ public class EntityGraphMapper : IEntityMapper
     {
         foreach (var property in entity.GetType().GetProperties())
         {
-            if (!property.CanRead || property.HasKeyAttribute())
+            if (!property.CanRead || property.HasKeyAttribute() || property.HasRelationshipAttribute())
             {
                 continue;
             }

@@ -12,7 +12,7 @@ internal class CypherExpressionFactory
         return matchExpression;
     }
 
-    internal Expression MakeBinary(ExpressionType operatorType, CypherExpression left, CypherExpression right, CypherTypeMapping? typeMapping)
+    internal Expression MakeBinary(ExpressionType operatorType, CypherExpression left, CypherExpression right)
     {
         var returnType = right.Type;
         switch (operatorType)

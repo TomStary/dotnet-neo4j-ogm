@@ -1,8 +1,7 @@
 using System.Linq.Expressions;
 using Neo4j.Driver;
-using Neo4j.OGM.Internals.Extensions;
+using Neo4j.OGM.Extensions.Internals;
 using Neo4j.OGM.Queries.CypherExpressions;
-using Neo4j.OGM.Utils;
 
 namespace Neo4j.OGM.Queries;
 

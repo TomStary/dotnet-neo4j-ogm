@@ -6,8 +6,7 @@ namespace Neo4j.OGM.Queries.Internal;
 
 public class EntityQueryable<TResult>
     : IOrderedQueryable<TResult>,
-            IAsyncEnumerable<TResult>,
-            IListSource
+            IAsyncEnumerable<TResult>
 {
     private readonly IAsyncQueryProvider _queryProvider;
 
@@ -30,16 +29,10 @@ public class EntityQueryable<TResult>
     }
 
     public IAsyncEnumerator<TResult> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
+        => _queryProvider.ExecuteAsync<IAsyncEnumerable<TResult>>(Expression, cancellationToken)
+            .GetAsyncEnumerator(cancellationToken);
 
     public IEnumerator<TResult> GetEnumerator()
-    {
-        throw new NotImplementedException();
-    }
-
-    public IList GetList()
     {
         throw new NotImplementedException();
     }

@@ -13,7 +13,6 @@ public class MetaData
     /// </summary>
     public ISchema Schema { get; init; }
 
-    /// <inheritdoc cref="Neo4j.OGM.Metadata.DomainInfo">
     private readonly DomainInfo _domainInfo;
 
     /// <summary>

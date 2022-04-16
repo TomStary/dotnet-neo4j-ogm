@@ -1,13 +1,19 @@
+using System.ComponentModel;
 using System.Reflection;
+using Microsoft.Win32;
+using Neo4j.OGM.Context;
 using Neo4j.OGM.Internals.Extensions;
 
 namespace Neo4j.OGM.Cypher.Compilers;
 
 public class CompilerContext : ICompilerContext
 {
-    private Dictionary<object, NodeBuilderHorizonPair> _visitedObjects = new();
-    private HashSet<long> _visitedRelationshipEntities = new();
+    private readonly Dictionary<object, NodeBuilderHorizonPair> _visitedObjects = new();
+    private readonly Dictionary<Tuple<long, long>, IEnumerable<object>> _transientRelationships = new();
+    private readonly HashSet<long> _visitedRelationshipEntities = new();
     private readonly IMultiStatementCypherCompiler _compiler;
+    private readonly HashSet<object> _registry = new();
+    private readonly List<MappedRelationship> _relationshipRegister = new();
 
     public IMultiStatementCypherCompiler Compiler => _compiler;
 
@@ -16,14 +22,23 @@ public class CompilerContext : ICompilerContext
         _compiler = compiler;
     }
 
-    public NodeBuilder? VisitedNode(object entity)
+    public NodeBuilder? VisitedNode(object? entity)
     {
+        if (entity == null)
+        {
+            return null;
+        }
+
         var pair = _visitedObjects.GetValueOrDefault(GetIdentifier(entity));
         return pair?.NodeBuilder;
     }
 
-    public bool Visited(object entity, int horizon)
+    public bool Visited(object? entity, int horizon)
     {
+        if (entity == null)
+        {
+            return false;
+        }
         var pair = _visitedObjects.GetValueOrDefault(GetIdentifier(entity));
         return pair != null && (horizon < 0 || pair.Horizon > horizon);
     }
@@ -63,5 +78,25 @@ public class CompilerContext : ICompilerContext
         internal NodeBuilder NodeBuilder => _nodeBuilder;
 
         internal int Horizon => _horizon;
+    }
+
+    internal IEnumerable<object> GetTransientRelationships(Tuple<long, long> tuple)
+    {
+        return _transientRelationships.GetValueOrDefault(tuple) ?? Array.Empty<object>();
+    }
+
+    internal void RegisterTransientRelationship(Tuple<long, long> tuple, TransientRelationship transientRelationship)
+    {
+        if (!_registry.Contains(transientRelationship))
+        {
+            _registry.Add(transientRelationship);
+            var value = _transientRelationships.GetValueOrDefault(tuple);
+            _transientRelationships[tuple] = value != null ? value.Append(transientRelationship) : (IEnumerable<object>)(new[] { transientRelationship });
+        }
+    }
+
+    internal void RegisterRelationship(MappedRelationship mappedRelationship)
+    {
+        _relationshipRegister.Add(mappedRelationship);
     }
 }

@@ -26,26 +26,19 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
         _methodCallTranslator = new MethodCallTranslator(_cypherExpressionFactory);
     }
 
-    internal CypherExpression? Translate(Expression expression)
+    internal CypherExpression Translate(Expression expression)
     {
         var result = Visit(expression);
 
         if (result is CypherExpression translation)
         {
-            translation = ApplyDefaultMapping(translation);
-
-            // if (translation?.TypeMapping == null)
-            // {
-            //     return null;
-            // }
-
             return translation;
         }
 
-        return null;
+        throw new InvalidOperationException("Translation failed");
     }
 
-    protected override Expression? VisitMember(MemberExpression memberExpression)
+    protected override Expression VisitMember(MemberExpression memberExpression)
     {
         var innerExpression = Visit(memberExpression.Expression);
 
@@ -56,11 +49,11 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
 
         return TryBindMember(innerExpression, MemberIdentity.Create(memberExpression.Member))
             ?? (TranslationFailed(memberExpression.Expression, innerExpression, out var cypherInnerExpression)
-                    ? null
+                    ? throw new InvalidOperationException("Translation failed")
                     : cypherInnerExpression);
     }
 
-    protected override Expression? VisitBinary(BinaryExpression binaryExpression)
+    protected override Expression VisitBinary(BinaryExpression binaryExpression)
     {
         if (binaryExpression.NodeType == ExpressionType.Coalesce)
         {
@@ -98,14 +91,13 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
             right = rightOperand;
         }
 
-        var visitedLeft = Visit(left);
-        var visitedRight = Visit(right);
+        var visitedLeft = Visit(left)!;
+        var visitedRight = Visit(right)!;
 
         if ((binaryExpression.NodeType == ExpressionType.Equal
                 || binaryExpression.NodeType == ExpressionType.NotEqual)
-            // Visited expression could be null, We need to pass MemberInitExpression
             && TryRewriteEntityEquality(
-                binaryExpression.NodeType, visitedLeft ?? left, visitedRight ?? right, out var result))
+                binaryExpression.NodeType, visitedLeft, visitedRight, out var result))
         {
             return result;
         }
@@ -120,14 +112,13 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
 
         return TranslationFailed(binaryExpression.Left, visitedLeft, out var cypherLeft)
             || TranslationFailed(binaryExpression.Right, visitedRight, out var cypherRight)
-                ? null
+                ? throw new InvalidOperationException("Translation failed")
                 : _cypherExpressionFactory.MakeBinary(
                     uncheckedNodeTypeVariant,
                     cypherLeft,
-                    cypherRight,
-                    null);
+                    cypherRight);
 
-        static bool TryUnwrapConvertToObject(Expression expression, out Expression operand)
+        static bool TryUnwrapConvertToObject(Expression expression, [NotNullWhen(true)] out Expression? operand)
         {
             if (expression is UnaryExpression convertExpression
                 && (convertExpression.NodeType == ExpressionType.Convert
@@ -144,7 +135,7 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
     }
 
     protected override Expression VisitConstant(ConstantExpression constantExpression)
-            => new CypherConstantExpression(constantExpression, null);
+            => new CypherConstantExpression(constantExpression);
 
     protected override Expression VisitExtension(Expression extensionExpression)
     {
@@ -169,7 +160,7 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
         return projectionBindingExpression.ProjectionMember != null
                         ? ((MatchExpression)projectionBindingExpression.QueryExpression)
                         .GetMappedProjection()
-                        : null;
+                        : throw new InvalidOperationException("Translation failed");
     }
 
     protected override Expression VisitMethodCall(MethodCallExpression methodCallExpression)
@@ -184,7 +175,7 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
             return TryBindMember(Visit(source), MemberIdentity.Create(propertyName));
         }
 
-        CypherExpression cypherObject = null;
+        CypherExpression? cypherObject;
         CypherExpression[] arguments;
         var method = methodCallExpression.Method;
 
@@ -212,14 +203,14 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
             }
             else
             {
-                return null;
+                throw new InvalidOperationException("Translation failed");
             }
         }
         else
         {
-            if (TranslationFailed(methodCallExpression.Object, Visit(methodCallExpression.Object), out cypherObject))
+            if (TranslationFailed(methodCallExpression.Object, Visit(methodCallExpression.Object)!, out cypherObject))
             {
-                return null;
+                throw new InvalidOperationException("Translation failed");
             }
 
             arguments = new CypherExpression[methodCallExpression.Arguments.Count];
@@ -228,7 +219,7 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
                 var argument = methodCallExpression.Arguments[i];
                 if (TranslationFailed(argument, Visit(argument), out var sqlArgument))
                 {
-                    return null;
+                    throw new InvalidOperationException("Translation failed");
                 }
 
                 arguments[i] = sqlArgument;
@@ -251,14 +242,19 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
     {
         if (!(source is EntityReferenceExpression entityReferenceExpression))
         {
-            return null;
+            throw new InvalidOperationException("Bind member failed.");
+        }
+
+        if (member.MemberInfo == null && member.Name == null)
+        {
+            throw new NullReferenceException("MeberIdentity does not have Name or MemberInfo");
         }
 
         var result = member.MemberInfo != null
                 ? entityReferenceExpression.ParameterEntity.BindMember(
                     member.MemberInfo, entityReferenceExpression.Type, clientEval: false, out _)
                 : entityReferenceExpression.ParameterEntity.BindMember(
-                    member.Name, entityReferenceExpression.Type, clientEval: false, out _);
+                    member.Name!, entityReferenceExpression.Type, clientEval: false, out _);
 
         return result switch
         {
@@ -298,16 +294,16 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
         return expression;
     }
 
-    private bool TranslationFailed(Expression? original, Expression translation, out CypherExpression castTranslation)
+    private bool TranslationFailed(Expression? original, Expression translation, [NotNullWhen(false)] out CypherExpression? castTranslation)
     {
         if (original != null
-            && !(translation is CypherExpression))
+            && translation is not CypherExpression)
         {
             castTranslation = null;
             return true;
         }
 
-        castTranslation = translation as CypherExpression;
+        castTranslation = (translation as CypherExpression)!; // weird hack, try to find better solution
         return false;
     }
 
@@ -374,18 +370,7 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
             return new EntityReferenceExpression(entityProjectionExpression);
         }
 
-        return null;
-    }
-
-    private CypherExpression? ApplyDefaultMapping(CypherExpression? cypherExpression)
-        => cypherExpression == null
-            || cypherExpression.TypeMapping != null
-            ? cypherExpression
-            : ApplyTypeMapping(cypherExpression);
-
-    private CypherExpression? ApplyTypeMapping(CypherExpression cypherExpression)
-    {
-        return cypherExpression;
+        throw new InvalidOperationException("Translation failed");
     }
 
     private sealed class EntityReferenceExpression : Expression
@@ -425,8 +410,7 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
     {
         protected override Expression VisitExtension(Expression extensionExpression)
         {
-            if (extensionExpression is CypherExpression sqlExpression
-                && sqlExpression.TypeMapping == null)
+            if (extensionExpression is CypherExpression sqlExpression)
             {
                 throw new InvalidOperationException();
             }

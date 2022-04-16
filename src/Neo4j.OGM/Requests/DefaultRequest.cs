@@ -6,10 +6,6 @@ public class DefaulterRequest
 
     public IEnumerable<IStatement> Statements => _statements;
 
-    public DefaulterRequest()
-    {
-    }
-
     public DefaulterRequest(IEnumerable<IStatement> statements)
     {
         _statements = statements;

@@ -32,7 +32,7 @@ public class SessionFactory : IDisposable
         CheckDisposed();
         // TODO: Register this to DIC
         var mappingContext = new MappingContext(_metadata);
-        var entityGraphMapper = new EntityGraphMapper(_metadata, mappingContext);
+        var entityGraphMapper = new EntityGraphMapper(mappingContext);
         return new Session(_metadata, _driver, entityGraphMapper);
     }
 

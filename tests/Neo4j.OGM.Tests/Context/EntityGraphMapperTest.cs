@@ -18,7 +18,7 @@ public class EntityGraphMapperTest
 
         var metadata = new MetaData(assembly.Object);
         var mappingContext = new MappingContext(metadata);
-        var entityGraphMapper = new EntityGraphMapper(metadata, mappingContext);
+        var entityGraphMapper = new EntityGraphMapper(mappingContext);
 
         var model = new SimplePerson()
         {
@@ -41,12 +41,12 @@ public class EntityGraphMapperTest
 
         var metadata = new MetaData(assembly.Object);
         var mappingContext = new MappingContext(metadata);
-        var entityGraphMapper = new EntityGraphMapper(metadata, mappingContext);
+        var entityGraphMapper = new EntityGraphMapper(mappingContext);
 
         var model = new Person()
         {
             Name = "John Doe",
-            Posts = new List<Post> { new Post() { Title = "Hello World" } },
+            Posts = new List<Post> { new Post() { Title = "Hello World" }, new Post() { Title = "Hello World 2" } },
         };
 
         var result = entityGraphMapper.Map(model, -1);
@@ -57,7 +57,7 @@ public class EntityGraphMapperTest
         Assert.NotNull(result.Compiler.GetAllStatements());
     }
 
-    [Fact(Skip = "Not implemented.")]
+    [Fact]
     public void MapTestRelationshipEntityWithInfiniteDepth()
     {
         var assembly = new Mock<Assembly>();
@@ -65,7 +65,7 @@ public class EntityGraphMapperTest
 
         var metadata = new MetaData(assembly.Object);
         var mappingContext = new MappingContext(metadata);
-        var entityGraphMapper = new EntityGraphMapper(metadata, mappingContext);
+        var entityGraphMapper = new EntityGraphMapper(mappingContext);
 
         var model = new AuthorsRelationship
         {
@@ -81,6 +81,44 @@ public class EntityGraphMapperTest
         Assert.NotNull(result.Compiler.GetAllStatements());
     }
 
+
+    [Fact]
+    public void MapTestMultiRelationshipWithInfiniteDepth()
+    {
+        var assembly = new Mock<Assembly>();
+        assembly.Setup(a => a.GetTypes()).Returns(new[] { typeof(Author), typeof(AuthorsRelationship), typeof(Note) });
+
+        var metadata = new MetaData(assembly.Object);
+        var mappingContext = new MappingContext(metadata);
+        var entityGraphMapper = new EntityGraphMapper(mappingContext);
+
+        var model = new List<AuthorsRelationship>
+        {
+            new AuthorsRelationship
+            {
+                Author = new Author() { Id = 1, Name = "John Doe" },
+                Note = new Note() { Title = "Hello World" }
+            },
+            new AuthorsRelationship
+            {
+                Author = new Author() { Id = 1, Name = "John Doe" },
+                Note = new Note() { Title = "Hello World 2" }
+            },
+        };
+
+        ICompilerContext? result = null;
+        foreach (var m in model)
+        {
+            result = entityGraphMapper.Map(m, -1);
+
+            Assert.NotNull(result);
+            Assert.IsAssignableFrom<ICompilerContext>(result);
+        }
+        Assert.NotNull(result);
+        result!.Compiler.UseStatementFactory(new RowStatementFactory());
+        Assert.NotNull(result.Compiler.GetAllStatements());
+    }
+
     [Fact]
     public void MapTestNullReferenceException()
     {
@@ -89,7 +127,7 @@ public class EntityGraphMapperTest
 
         var metadata = new MetaData(assembly.Object);
         var mappingContext = new MappingContext(metadata);
-        var entityGraphMapper = new EntityGraphMapper(metadata, mappingContext);
+        var entityGraphMapper = new EntityGraphMapper(mappingContext);
 
         Assert.Throws<ArgumentNullException>(() => entityGraphMapper.Map(default(SimplePerson), -1));
     }

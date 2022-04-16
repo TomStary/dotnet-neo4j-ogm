@@ -7,12 +7,10 @@ public class CypherExpression : Expression
     public sealed override ExpressionType NodeType
             => ExpressionType.Extension;
 
-    public CypherExpression(Type type, CypherTypeMapping? typeMapping)
+    public CypherExpression(Type type)
     {
         Type = type;
-        TypeMapping = typeMapping;
     }
 
     public override Type Type { get; }
-    public CypherTypeMapping? TypeMapping { get; internal set; }
 }

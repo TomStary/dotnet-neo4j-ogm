@@ -15,24 +15,24 @@ public class EntityQueryProvider : IAsyncQueryProvider
 
     public IQueryable CreateQuery(Expression expression)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public object? Execute(Expression expression)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public TResult Execute<TResult>(Expression expression)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
-    public TResult ExecuteAsync<TResult>(Expression expression)
+    public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
         => _queryCompiler.ExecuteAsync<TResult>(expression);
 }

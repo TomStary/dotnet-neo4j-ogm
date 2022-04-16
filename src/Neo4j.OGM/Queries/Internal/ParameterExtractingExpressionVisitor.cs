@@ -59,7 +59,7 @@ public class ParameterExtractingExpressionVisitor : ExpressionVisitor
         return base.Visit(expression);
     }
 
-    private Expression? Evaluate(Expression expression, bool generateParameter)
+    private Expression Evaluate(Expression expression, bool generateParameter)
     {
         object? parameterValue;
         string? parameterName;

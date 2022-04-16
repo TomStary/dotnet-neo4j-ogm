@@ -14,7 +14,7 @@ public class CypherUnaryExpression : CypherExpression
         ExpressionType operatorType,
         CypherExpression operand,
         Type type)
-        : base(type, null)
+        : base(type)
     {
         if (!_allowedOperators.Contains(operatorType))
         {

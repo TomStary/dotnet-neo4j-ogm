@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Reflection;
 
 namespace Neo4j.OGM.Queries;
@@ -10,6 +9,18 @@ public class ProjectionMember
     public ProjectionMember()
     {
         _memberChain = new List<MemberInfo>();
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+
+        for (var i = 0; i < _memberChain.Count; i++)
+        {
+            hash.Add(_memberChain[i]);
+        }
+
+        return hash.ToHashCode();
     }
 
     public override bool Equals(object? obj)

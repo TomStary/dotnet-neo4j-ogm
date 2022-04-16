@@ -63,36 +63,4 @@ public class QueryableExtensionsTest
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => dbSet.FirstOrDefaultAsync(null));
     }
-
-    private class PersonRecord : IRecord
-    {
-        public object this[int index] => throw new System.NotImplementedException();
-
-        public object this[string key] => Values[key];
-
-        public IReadOnlyDictionary<string, object> Values { get; }
-
-        public IReadOnlyList<string> Keys { get; }
-
-        public PersonRecord(IReadOnlyDictionary<string, object> values)
-        {
-            Values = values;
-            Keys = values.Keys.ToList();
-        }
-    }
-
-    private class PersonEntity : IEntity
-    {
-        public object this[string key] => Properties[key];
-
-        public IReadOnlyDictionary<string, object> Properties { get; }
-
-        public long Id { get; }
-
-        public PersonEntity(long key, IReadOnlyDictionary<string, object> properties)
-        {
-            Id = key;
-            Properties = properties;
-        }
-    }
 }

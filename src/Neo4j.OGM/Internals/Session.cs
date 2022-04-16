@@ -2,6 +2,7 @@ using System.Collections;
 using Neo4j.Driver;
 using Neo4j.OGM.Context;
 using Neo4j.OGM.Cypher.Compilers;
+using Neo4j.OGM.Internals.Extensions;
 using Neo4j.OGM.Metadata;
 using Neo4j.OGM.Requests;
 
@@ -41,10 +42,10 @@ public class Session : ISession
         CheckDisposed();
 
         // tranform entity/entities into array
-        IEnumerable<TEntity> objects;
+        IEnumerable objects;
         if (typeof(IEnumerable).IsAssignableFrom(entity.GetType()))
         {
-            objects = (IEnumerable<TEntity>)entity;
+            objects = (IEnumerable)entity;
         }
         else
         {
@@ -60,6 +61,7 @@ public class Session : ISession
         // execute statements
         await ExecuteSave(_entityGraphMapper.CompilerContext());
     }
+
 
     public DbSet<TEntity> Set<TEntity>() where TEntity : class
     {
@@ -122,6 +124,13 @@ public class Session : ISession
         if (compiler.HasStatementDependentOnNewNode())
         {
             await ExecuteStatementsAsync(context, compiler.CreateNodesStatements());
+
+            var statements = new List<IStatement>();
+            statements.AddRange(compiler.CreateRelationshipsStatements());
+            statements.AddRange(compiler.UpdateNodesStatements());
+            statements.AddRange(compiler.UpdateRelationshipsStatements());
+
+            await ExecuteStatementsAsync(context, statements);
         }
         else
         {

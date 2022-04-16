@@ -1,4 +1,5 @@
 using Moq;
+using Neo4j.OGM.Context;
 using Neo4j.OGM.Cypher.Compilers;
 using Neo4j.OGM.Tests.TestModels;
 
@@ -27,6 +28,9 @@ public class CompilerContextTest
 
         nodeBuilder = compilerContext.VisitedNode(node);
         Assert.NotNull(nodeBuilder);
+
+        nodeBuilder = compilerContext.VisitedNode(null);
+        Assert.Null(nodeBuilder);
     }
 
     [Fact]
@@ -53,6 +57,9 @@ public class CompilerContextTest
 
         visited = compilerContext.Visited(node, 1);
         Assert.True(visited);
+
+        visited = compilerContext.Visited(null, 1);
+        Assert.False(visited);
     }
 
     [Fact]
@@ -73,5 +80,19 @@ public class CompilerContextTest
 
         visited = compilerContext.VisitedRelationshipEntity(id);
         Assert.True(visited);
+    }
+
+    [Fact]
+    public void RegisterRelationshipTest()
+    {
+        var multistatementCompilerMock = new Mock<IMultiStatementCypherCompiler>();
+
+        var compilerContext = new CompilerContext(multistatementCompilerMock.Object);
+
+        var mappedRelationship = new MappedRelationship(1, "", 2, 3, typeof(SimplePerson), typeof(SimplePerson));
+
+        compilerContext.RegisterRelationship(mappedRelationship);
+        // test that methods wont throw exception
+        compilerContext.RegisterRelationship(mappedRelationship);
     }
 }

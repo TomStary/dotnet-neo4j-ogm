@@ -1,5 +1,6 @@
 using Neo4j.OGM.Cypher.Compilers.Statements;
 using Neo4j.OGM.Requests;
+using Neo4j.OGM.Response.Model;
 
 namespace Neo4j.OGM.Cypher.Compilers;
 
@@ -23,6 +24,74 @@ public class MultiStatementCypherCompiler : IMultiStatementCypherCompiler
     {
         var statements = new List<IStatement>();
         statements.AddRange(CreateNodesStatements());
+        statements.AddRange(CreateRelationshipsStatements());
+        statements.AddRange(UpdateNodesStatements());
+        statements.AddRange(UpdateRelationshipsStatements());
+        return statements;
+    }
+
+    public IEnumerable<IStatement> UpdateRelationshipsStatements()
+    {
+        CheckIfNotNull(_statementFactory, "StatementFactory");
+
+        var relationships = new List<RelationshipModel>(_existingRelationshipBuilders.Count);
+        var statements = new List<IStatement>();
+        if (_existingRelationshipBuilders.Count > 0)
+        {
+            foreach (var relationshipBuilder in _existingRelationshipBuilders)
+            {
+                relationships.Add(relationshipBuilder.RelationshipModel());
+            }
+            var ExistingRelationshipStatementBuilder = new ExistingRelationshipStatementBuilder(relationships, _statementFactory);
+            statements.Add(ExistingRelationshipStatementBuilder.Build());
+        }
+
+        return statements;
+    }
+
+    public IEnumerable<IStatement> UpdateNodesStatements()
+    {
+        CheckIfNotNull(_statementFactory, "StatementFactory");
+
+        var nodeByLabels = _existingNodeBuilders.Select(x => x.Node).GroupBy(x => x.Label).ToDictionary(x => x.Key, x => x.ToList());
+        var statements = new List<IStatement>();
+        foreach (var nodeModels in nodeByLabels.Values)
+        {
+            var existingNodeBuilder = new ExistingNodeStatementBuilder(nodeModels, _statementFactory);
+            statements.Add(existingNodeBuilder.Build());
+        }
+
+        return statements;
+    }
+
+    public IEnumerable<IStatement> CreateRelationshipsStatements()
+    {
+        CheckIfNotNull(_statementFactory, "StatementFactory");
+
+        Dictionary<string, List<RelationshipModel>> relsByType = new();
+        foreach (var newRelationship in _newRelationshipBuilders)
+        {
+            if (newRelationship.StartNode() == null || newRelationship.EndNode() == null)
+            {
+                continue;
+            }
+
+            var rels = relsByType.GetValueOrDefault(newRelationship.Type)
+                ?? new List<RelationshipModel>();
+
+            var model = newRelationship.RelationshipModel();
+
+            rels.Add(model);
+            relsByType[newRelationship.Type] = rels;
+        }
+
+        List<IStatement> statements = new();
+        foreach (var relationships in relsByType.Values)
+        {
+            var newRelationshipStatementBuilder = new NewRelationshipStatementBuilder(relationships, _statementFactory);
+            statements.Add(newRelationshipStatementBuilder.Build());
+        }
+
         return statements;
     }
 

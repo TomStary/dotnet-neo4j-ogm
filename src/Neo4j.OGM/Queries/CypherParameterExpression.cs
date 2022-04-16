@@ -11,8 +11,8 @@ internal class CypherParameterExpression : CypherExpression
     public string Name
             => _name;
 
-    public CypherParameterExpression(ParameterExpression parameterExpression, CypherTypeMapping? typeMapping)
-           : base(parameterExpression.Type, typeMapping)
+    public CypherParameterExpression(ParameterExpression parameterExpression)
+           : base(parameterExpression.Type)
     {
         _parameterExpression = parameterExpression;
         _name = parameterExpression.Name;

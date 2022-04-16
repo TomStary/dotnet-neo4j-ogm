@@ -8,7 +8,7 @@ namespace Neo4j.OGM.Queries;
 internal class KeyAccessExpression : CypherExpression, IAccessExpression
 {
     public KeyAccessExpression(PropertyInfo property, Expression accessExpression)
-        : base(property.PropertyType, null)
+        : base(property.PropertyType)
     {
         Property = property;
         AccessExpression = accessExpression;
