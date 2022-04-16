@@ -10,6 +10,7 @@
     <Authors>Tomáš Starý</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/TomStary/dotnet-neo4j-ogm</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/TomStary/dotnet-neo4j-ogm</RepositoryUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Description>The unofficial .NET OGM for Neo4j Graph Database using official Bolt driver with LINQ support.</Description>
     <PackageTags>Cypher NoSql Graph Neo4j OGM LINQ</PackageTags>
