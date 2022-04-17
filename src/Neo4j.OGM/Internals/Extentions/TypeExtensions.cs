@@ -89,7 +89,8 @@ internal static class TypeExtensions
             type.GetNeo4jName(),
         };
 
-        if (nodeAttribute != null)
+        if (nodeAttribute != null
+            && !string.IsNullOrEmpty(nodeAttribute.Label))
         {
             labels.Add(nodeAttribute.Label);
         }

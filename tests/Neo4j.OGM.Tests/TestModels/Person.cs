@@ -4,7 +4,7 @@ using static Neo4j.OGM.Annotations.RelationshipAttribute;
 
 namespace Neo4j.OGM.Tests.TestModels;
 
-[Node(nameof(Person))]
+[Node]
 public class Person
 {
     [Key]
