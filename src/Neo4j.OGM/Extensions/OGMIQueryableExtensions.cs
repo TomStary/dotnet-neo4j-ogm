@@ -21,6 +21,35 @@ public static class OGMIQueryableExtensions
         );
     }
 
+    public static async Task<List<TSource>> ToListAsync<TSource>(
+        this IQueryable<TSource> source
+    ) where TSource : class
+    {
+        var list = new List<TSource>();
+        await foreach (var element in source.AsAsyncEnumerable().WithCancellation(default))
+        {
+            list.Add(element);
+        }
+        return list;
+    }
+
+    public static IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(
+        this IQueryable<TSource> source
+    ) where TSource : class
+    {
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source), "Source must not be null");
+        }
+
+        if (source is IAsyncEnumerable<TSource> asyncEnumerable)
+        {
+            return asyncEnumerable;
+        }
+
+        throw new InvalidOperationException("Cannot return an IAsyncEnumerable from a non-IAsyncEnumerable");
+    }
+
     private static TResult ExecuteAsync<TSource, TResult>(
         MethodInfo operatorMethodInfo,
         IQueryable<TSource> source,
