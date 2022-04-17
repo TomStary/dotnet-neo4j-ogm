@@ -24,7 +24,14 @@ internal static class IRecordExtension
                 var propertyValue = ((IEntity)record[alias])[propertyName];
                 if (propertyValue != null)
                 {
-                    property.SetValue(entity, Convert.ChangeType(propertyValue, propertyType));
+                    if (propertyType == typeof(ZonedDateTime))
+                    {
+                        property.SetValue(entity, propertyValue);
+                    }
+                    else
+                    {
+                        property.SetValue(entity, Convert.ChangeType(propertyValue, propertyType));
+                    }
                 }
             }
         }

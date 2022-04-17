@@ -132,4 +132,38 @@ public class QueryableExtensionsTest
         Assert.NotNull(result);
         Assert.Empty(result);
     }
+
+    [Fact]
+    public async Task WhereTest()
+    {
+        var metadataMock = new Mock<MetaData>();
+        var driverMock = new Mock<IDriver>();
+        var entityGraphMapperMock = new Mock<IEntityMapper>();
+
+        var asyncSessionMock = new Mock<IAsyncSession>();
+        var asyncTransactionMock = new Mock<IAsyncTransaction>();
+        var resultCursorMock = new Mock<IResultCursor>();
+
+        driverMock.Setup(x => x.AsyncSession()).Returns(asyncSessionMock.Object);
+        asyncSessionMock.Setup(x => x.BeginTransactionAsync()).ReturnsAsync(asyncTransactionMock.Object);
+        asyncTransactionMock.Setup(x => x.RunAsync(It.IsAny<Query>())).ReturnsAsync(resultCursorMock.Object);
+        resultCursorMock.SetupSequence(x => x.FetchAsync())
+                        .ReturnsAsync(true)
+                        .ReturnsAsync(false);
+
+        var personEntity = new PersonEntity(1, new Dictionary<string, object> { { "name", "Test" } });
+        var presonRecord = new PersonRecord(new Dictionary<string, object> { { "c", personEntity } });
+
+        resultCursorMock.SetupSequence(x => x.Current)
+                        .Returns(presonRecord);
+
+        var session = new Session(metadataMock.Object, driverMock.Object, entityGraphMapperMock.Object);
+
+        var dbSet = session.Set<SimplePerson>();
+
+        var result = await dbSet.Where(x => x.Name == "Test").ToListAsync();
+
+        Assert.NotNull(result);
+        Assert.Single(result);
+    }
 }

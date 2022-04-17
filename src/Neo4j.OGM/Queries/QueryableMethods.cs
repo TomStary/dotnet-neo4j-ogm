@@ -11,6 +11,8 @@ public static class QueryableMethods
 {
     public static MethodInfo FirstOrDefaultWithPredicate { get; }
 
+    public static MethodInfo Where { get; }
+
     static QueryableMethods()
     {
         var queryableMethodGroups = typeof(Queryable)
@@ -25,6 +27,14 @@ public static class QueryableMethods
                 typeof(IQueryable<>).MakeGenericType(types[0]),
                 typeof(Expression<>).MakeGenericType(typeof(Func<,>).MakeGenericType(types[0], typeof(bool)))
             });
+
+        Where = GetMethod(
+                nameof(Queryable.Where), 1,
+                types => new[]
+                {
+                    typeof(IQueryable<>).MakeGenericType(types[0]),
+                    typeof(Expression<>).MakeGenericType(typeof(Func<,>).MakeGenericType(types[0], typeof(bool)))
+                });
 
         MethodInfo GetMethod(string name, int genericParameterCount, Func<Type[], Type[]> parameterGenerator)
             => queryableMethodGroups[name].Single(

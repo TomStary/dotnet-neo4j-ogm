@@ -49,7 +49,14 @@ internal class QueryableMethodTranslationExpressionVisitor : ExpressionVisitor
 
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
+        ShapedQueryExpression CheckTranslated(ShapedQueryExpression? translated)
+        {
+            return translated
+                ?? throw new InvalidOperationException("Translated expression was null");
+        }
+
         var method = node.Method;
+
         if (node.Method.DeclaringType == typeof(Queryable))
         {
             var genericMethod = method.IsGenericMethod ? method.GetGenericMethodDefinition() : null;
@@ -61,7 +68,11 @@ internal class QueryableMethodTranslationExpressionVisitor : ExpressionVisitor
                     case nameof(Queryable.FirstOrDefault)
                         when genericMethod == QueryableMethods.FirstOrDefaultWithPredicate:
                         shapedQueryExpression = shapedQueryExpression.UpdateResultCardinality(ResultCardinality.SingleOrDefault);
-                        return TranslateFirstOrDefault(shapedQueryExpression, GetLambdaExpressionFromArgument(1), node.Type, true);
+                        return CheckTranslated(TranslateFirstOrDefault(shapedQueryExpression, GetLambdaExpressionFromArgument(1), node.Type, true));
+
+                    case nameof(Queryable.Where)
+                        when genericMethod == QueryableMethods.Where:
+                        return CheckTranslated(TranslateWhere(shapedQueryExpression, GetLambdaExpressionFromArgument(1)));
 
                         LambdaExpression GetLambdaExpressionFromArgument(int argumentIndex)
                                     => node.Arguments[argumentIndex].UnwrapLambdaFromQuote();

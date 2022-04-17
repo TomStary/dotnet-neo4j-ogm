@@ -1,9 +1,16 @@
 using System.Linq.Expressions;
+using System.Reflection;
+using Neo4j.OGM.Internals.Extensions;
+using Neo4j.OGM.Queries.Internal;
 
 namespace Neo4j.OGM.Queries;
 
 public class EntityQueryProvider : IAsyncQueryProvider
 {
+    private static readonly MethodInfo _genericCreateQueryMethod
+        = typeof(EntityQueryProvider).GetRuntimeMethods()
+            .Single(m => (m.Name == "CreateQuery") && m.IsGenericMethod);
+
     private QueryCompiler _queryCompiler;
     private readonly ISession _session;
 
@@ -14,14 +21,13 @@ public class EntityQueryProvider : IAsyncQueryProvider
     }
 
     public IQueryable CreateQuery(Expression expression)
-    {
-        throw new NotSupportedException();
-    }
+        => (IQueryable)_genericCreateQueryMethod
+                .MakeGenericMethod(expression.Type.GetSequenceType())
+                .Invoke(this, new object[] { expression })!;
 
     public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
-    {
-        throw new NotSupportedException();
-    }
+        => new EntityQueryable<TElement>(this, expression);
+
 
     public object? Execute(Expression expression)
     {
