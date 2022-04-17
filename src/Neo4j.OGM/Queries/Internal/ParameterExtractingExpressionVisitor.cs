@@ -124,7 +124,7 @@ public class ParameterExtractingExpressionVisitor : ExpressionVisitor
             + "_"
             + _parameterValues.ParameterValues.Count;
 
-        _parameterValues.AddParameter(parameterName, parameterValue);
+        _parameterValues.AddParameter(parameterName, parameterValue!);
 
         var parameter = Expression.Parameter(expression.Type, parameterName);
 

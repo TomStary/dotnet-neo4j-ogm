@@ -36,7 +36,7 @@ internal sealed class QueryingEnumerable<T> : IAsyncEnumerable<T>, IEnumerable<T
     IEnumerator IEnumerable.GetEnumerator()
         => GetEnumerator();
 
-    public IStatement GenerateQuery() => new CypherExpressionVisitor().GenerateCypherQuery(_matchExpression);
+    public IStatement GenerateQuery() => new CypherExpressionVisitor().GenerateCypherQuery(_matchExpression, _queryContext.ParameterValues);
 
     private sealed class Enumerator : IEnumerator<T>, IAsyncEnumerator<T>
     {

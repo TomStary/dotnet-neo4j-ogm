@@ -1,4 +1,5 @@
 using System.Reflection;
+using Neo4j.OGM.Internals.Extensions;
 using Neo4j.OGM.Queries.CypherExpressions;
 
 namespace Neo4j.OGM.Queries.Internal;
@@ -6,6 +7,9 @@ namespace Neo4j.OGM.Queries.Internal;
 internal class MethodCallTranslator
 {
     private readonly CypherExpressionFactory _cypherExpressionFactory;
+
+    private static readonly MethodInfo _containsMethodInfo
+            = typeof(string).GetRequiredRuntimeMethod(nameof(string.Contains), typeof(string));
 
     internal MethodCallTranslator(CypherExpressionFactory cypherExpressionFactory)
     {
@@ -24,6 +28,14 @@ internal class MethodCallTranslator
             left = instance;
             right = arguments[0];
         }
+        else if (_containsMethodInfo.Equals(method))
+        {
+            return new CypherFunctionExpression(
+                "CONTAINS",
+                typeof(bool),
+                instance!,
+                arguments[0]);
+        }
         else if (instance == null
             && method.Name == nameof(object.Equals)
             && arguments.Count == 2)
@@ -38,6 +50,6 @@ internal class MethodCallTranslator
                 || (left.Type == typeof(object) && (left is CypherParameterExpression || left is CypherConstantExpression))
                     ? _cypherExpressionFactory.Equal(left, right)
                     : _cypherExpressionFactory.Constant(false)
-            : throw new InvalidOperationException("Translation failed");
+            : throw new InvalidOperationException("Method call translation failed");
     }
 }

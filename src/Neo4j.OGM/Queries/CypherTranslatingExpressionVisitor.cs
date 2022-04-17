@@ -137,6 +137,11 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
     protected override Expression VisitConstant(ConstantExpression constantExpression)
             => new CypherConstantExpression(constantExpression);
 
+    protected override Expression VisitParameter(ParameterExpression parameterExpression)
+        => parameterExpression.Name?.StartsWith(QueryCompilationContext.QueryParameterPrefix, StringComparison.Ordinal) == true
+            ? new CypherParameterExpression(parameterExpression)
+            : throw new InvalidOperationException("Translation failed");
+
     protected override Expression VisitExtension(Expression extensionExpression)
     {
         if (extensionExpression == null)

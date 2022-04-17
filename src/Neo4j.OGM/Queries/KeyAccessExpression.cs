@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Neo4j.OGM.Extensions.Internals;
+using Neo4j.OGM.Internals.Extensions;
 using Neo4j.OGM.Queries.CypherExpressions;
 
 namespace Neo4j.OGM.Queries;
@@ -22,7 +23,7 @@ internal class KeyAccessExpression : CypherExpression, IAccessExpression
 
     public override string ToString()
     {
-        return $"ID({AccessExpression})";
+        return Property.HasKeyAttribute() ? $"ID({AccessExpression})" : $"{AccessExpression}.{Name}";
     }
 }
 

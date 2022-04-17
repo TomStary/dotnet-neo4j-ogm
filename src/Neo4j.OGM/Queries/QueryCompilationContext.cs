@@ -6,7 +6,7 @@ namespace Neo4j.OGM.Queries;
 
 public class QueryCompilationContext
 {
-    public const string QueryParameterPrefix = "__";
+    public const string QueryParameterPrefix = "param_";
     public static readonly ParameterExpression QueryContextParameter = Expression.Parameter(typeof(QueryContext), "queryContext");
     public bool IsAsync { get; }
 

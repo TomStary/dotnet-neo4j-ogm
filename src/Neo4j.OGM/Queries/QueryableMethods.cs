@@ -10,7 +10,6 @@ namespace Neo4j.OGM.Queries;
 public static class QueryableMethods
 {
     public static MethodInfo FirstOrDefaultWithPredicate { get; }
-
     public static MethodInfo Where { get; }
 
     static QueryableMethods()

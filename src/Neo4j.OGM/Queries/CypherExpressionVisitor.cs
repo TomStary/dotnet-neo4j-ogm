@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Linq.Expressions;
 using System.Text;
 using Neo4j.OGM.Internals.Extensions;
@@ -55,15 +56,29 @@ internal class CypherExpressionVisitor : ExpressionVisitor
 
             case CypherParameterExpression cypherParameterExpression:
                 return VisitCypherParameter(cypherParameterExpression);
+
+            case CypherFunctionExpression cypherFunctionExpression:
+                return VisitCypherFunction(cypherFunctionExpression);
         }
 
         return base.VisitExtension(extensionExpression);
     }
 
-    internal IStatement GenerateCypherQuery(MatchExpression matchExpression)
+    private Expression VisitCypherFunction(CypherFunctionExpression cypherFunctionExpression)
+    {
+        _cypherBuilder.Append('(');
+        Visit(cypherFunctionExpression.Selector);
+        _cypherBuilder.Append($" {cypherFunctionExpression.Function} ");
+        Visit(cypherFunctionExpression.Argument);
+        _cypherBuilder.Append(')');
+
+        return cypherFunctionExpression;
+    }
+
+    internal IStatement GenerateCypherQuery(MatchExpression matchExpression, IReadOnlyDictionary<string, object> parameters)
     {
         Visit(matchExpression);
-        return new QueryStatement(_cypherBuilder.ToString(), new Dictionary<string, object?>());
+        return new QueryStatement(_cypherBuilder.ToString(), parameters.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
     }
 
     protected Expression VisitMatch(MatchExpression matchExpression)
@@ -110,9 +125,11 @@ internal class CypherExpressionVisitor : ExpressionVisitor
         return returnCypherExpression;
     }
 
-    protected Expression VisitCypherParameter(CypherParameterExpression CypherParameterExpression)
+    protected Expression VisitCypherParameter(CypherParameterExpression cypherParameterExpression)
     {
-        throw new NotImplementedException();
+        var parameterName = $"${cypherParameterExpression.Name}";
+        _cypherBuilder.Append(parameterName);
+        return cypherParameterExpression;
     }
 
     protected Expression VisitCypherUnary(CypherUnaryExpression CypherUnaryExpression)
@@ -122,7 +139,14 @@ internal class CypherExpressionVisitor : ExpressionVisitor
 
     protected Expression VisitCypherConstant(CypherConstantExpression cypherConstantExpression)
     {
-        _cypherBuilder.Append(cypherConstantExpression.Value);
+        if (cypherConstantExpression.Type == typeof(string))
+        {
+            _cypherBuilder.Append($"'{cypherConstantExpression.Value}'");
+        }
+        else
+        {
+            _cypherBuilder.Append(cypherConstantExpression.Value);
+        }
         return cypherConstantExpression;
     }
 
