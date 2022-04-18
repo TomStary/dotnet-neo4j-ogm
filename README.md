@@ -1,10 +1,9 @@
 # Neo4j OGM for .NET
 
-| :bangbang: | This is proof of concept |
-| :--------: | :----------------------: |
+| :bangbang: | This is a proof of concept |
+| :--------: | :------------------------: |
 
-This library is an object-graph mapper with support for LINQ queries. The library
-is heavily inspired by the [Entity Framework](https://github.com/dotnet/efcore).
+This library is an object-graph mapper with support for LINQ queries and it is heavily inspired by the [Entity Framework](https://github.com/dotnet/efcore).
 
 ## Getting Started
 
