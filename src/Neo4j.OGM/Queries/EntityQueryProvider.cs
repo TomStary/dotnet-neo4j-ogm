@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using Neo4j.OGM.Internals.Extensions;
@@ -20,6 +21,7 @@ public class EntityQueryProvider : IAsyncQueryProvider
         _queryCompiler = new QueryCompiler(session);
     }
 
+    [ExcludeFromCodeCoverage(Justification = "This is not a part of POC.")]
     public IQueryable CreateQuery(Expression expression)
         => (IQueryable)_genericCreateQueryMethod
                 .MakeGenericMethod(expression.Type.GetSequenceType())
@@ -29,11 +31,13 @@ public class EntityQueryProvider : IAsyncQueryProvider
         => new EntityQueryable<TElement>(this, expression);
 
 
+    [ExcludeFromCodeCoverage(Justification = "This is not a part of POC.")]
     public object? Execute(Expression expression)
     {
         throw new NotSupportedException();
     }
 
+    [ExcludeFromCodeCoverage(Justification = "This is not a part of POC.")]
     public TResult Execute<TResult>(Expression expression)
     {
         throw new NotSupportedException();

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Neo4j.OGM.Annotations;
 using Neo4j.OGM.Exceptions;
@@ -273,6 +274,7 @@ internal static class TypeExtensions
     }
 
     // source https://github.com/dotnet/efcore
+    [ExcludeFromCodeCoverage(Justification = "Should be tested but is missing the use case right now.")]
     public static IEnumerable<Type> GetBaseTypes(this Type type)
     {
         var currentType = type.BaseType;

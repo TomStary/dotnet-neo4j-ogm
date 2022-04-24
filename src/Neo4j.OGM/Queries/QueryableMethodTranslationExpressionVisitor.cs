@@ -42,7 +42,6 @@ internal class QueryableMethodTranslationExpressionVisitor : ExpressionVisitor
                     entityType,
                     new ProjectionBindingExpression(
                         matchExpression,
-                        new ProjectionMember(),
                         typeof(IRecord)),
                     false));
     }

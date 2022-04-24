@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Neo4j.OGM.Annotations;
 using Neo4j.OGM.Cypher.Compilers;
@@ -211,6 +212,7 @@ public class EntityGraphMapper : IEntityMapper
         }
     }
 
+    [ExcludeFromCodeCoverage(Justification = "This is not a part of POC.")]
     private void MapRelationshipEntity(
         object relationshipEntity,
         object? parent,

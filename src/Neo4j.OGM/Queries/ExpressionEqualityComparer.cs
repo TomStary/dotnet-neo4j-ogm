@@ -1,9 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Neo4j.OGM.Queries;
 
 // this file is from repository: https://github.com/dotnet/efcore
+[ExcludeFromCodeCoverage(Justification = "This is not a part of POC.")]
 public sealed class ExpressionEqualityComparer : IEqualityComparer<Expression?>
 {
     /// <summary>

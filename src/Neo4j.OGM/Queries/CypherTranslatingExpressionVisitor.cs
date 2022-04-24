@@ -162,10 +162,8 @@ internal class CypherTranslatingExpressionVisitor : ExpressionVisitor
 
     private Expression ProjectionBindingVisit(ProjectionBindingExpression projectionBindingExpression)
     {
-        return projectionBindingExpression.ProjectionMember != null
-                        ? ((MatchExpression)projectionBindingExpression.QueryExpression)
-                        .GetMappedProjection()
-                        : throw new InvalidOperationException("Translation failed");
+        return ((MatchExpression)projectionBindingExpression.QueryExpression)
+                        .GetMappedProjection();
     }
 
     protected override Expression VisitMethodCall(MethodCallExpression methodCallExpression)

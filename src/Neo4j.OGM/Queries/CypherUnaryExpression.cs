@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Neo4j.OGM.Queries.CypherExpressions;
 
 namespace Neo4j.OGM.Queries;
 
+[ExcludeFromCodeCoverage(Justification = "This is not a part of POC.")]
 public class CypherUnaryExpression : CypherExpression
 {
     private static readonly ISet<ExpressionType> _allowedOperators = new HashSet<ExpressionType>

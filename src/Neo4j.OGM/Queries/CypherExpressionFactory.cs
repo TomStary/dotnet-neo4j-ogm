@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Neo4j.OGM.Queries.CypherExpressions;
 
@@ -26,11 +27,13 @@ internal class CypherExpressionFactory
         return new CypherBinaryExpression(operatorType, left, right, returnType);
     }
 
+    [ExcludeFromCodeCoverage(Justification = "This is not a part of POC.")]
     internal CypherExpression Equal(CypherExpression left, CypherExpression right)
     {
         throw new NotImplementedException();
     }
 
+    [ExcludeFromCodeCoverage(Justification = "This is not a part of POC.")]
     internal CypherExpression Constant(bool v)
     {
         throw new NotImplementedException();
